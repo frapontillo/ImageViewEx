@@ -6,15 +6,12 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import net.phoenix.cache.BytesCache;
+
 import android.os.Bundle;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
-
-import com.github.ignition.support.cache.AbstractCache;
-import com.github.ignition.support.cache.ImageCache;
 
 /**
  * Runnable that retrieves a resource from the web and an {@link AbstractCache}
@@ -26,7 +23,6 @@ import com.github.ignition.support.cache.ImageCache;
  * @author Sebastiano Poggi
  *
  */
-@SuppressWarnings("rawtypes")
 public class RemoteLoaderJob implements Runnable {
 
     private static final String LOG_TAG = "Phoenix/Loader";
@@ -35,10 +31,10 @@ public class RemoteLoaderJob implements Runnable {
     
     private String resourceUrl;
     private RemoteLoaderHandler handler;
-	private AbstractCache cache;
+	private BytesCache cache;
     private int numRetries, defaultBufferSize;
 
-    public RemoteLoaderJob(String url, RemoteLoaderHandler handler, AbstractCache cache,
+    public RemoteLoaderJob(String url, RemoteLoaderHandler handler, BytesCache cache,
             int numRetries, int defaultBufferSize) {
         this.resourceUrl = url;
         this.handler = handler;
@@ -47,46 +43,82 @@ public class RemoteLoaderJob implements Runnable {
         this.defaultBufferSize = defaultBufferSize;
     }
     
-    // TODO: continue here.
-    
     /**
      * The job method run on a worker thread. It will first query the cache, and on a miss,
-     * download the image from the Web.
+     * download the object from the Web.
+     * The message handler will be called for every steps, informing about the status.
      */
     @Override
     public void run() {
-        Bitmap bitmap = null;
+    	byte[] object = null;
+    	
+    	// Put everything in a try block, so to get any error and call for ERROR_EXTRA
+    	try {
+	    	// BEFORE
+	    	notifySomething(object, null, RemoteLoaderHandler.BEFORE_EXTRA);
+	    	
+	    	// See if we have a cache
+	    	if (cache != null) {
+	    		// Look for the object in cache
+	    		boolean inMem = false;
+	    		boolean onDisk = false;
+	    		inMem = cache.containsKeyInMemory(resourceUrl);
+	    		if (!inMem && cache.isDiskCacheEnabled()) onDisk = cache.containsKeyOnDisk(resourceUrl);
+	    		// If is is in cache, get it
+	    		if (inMem || onDisk)
+	    			object = cache.get(resourceUrl);
+	    		
+	    		// Call the proper hit/miss callbacks
+	    		if (object == null) {
+	    			// If the object wasn't found, call both MISSes
+	    			notifySomething(object, null, RemoteLoaderHandler.MEM_MISS_EXTRA);
+	    			notifySomething(object, null, RemoteLoaderHandler.DISK_MISS_EXTRA);
+	    		}
+	    		else if (inMem) notifySomething(object, null, RemoteLoaderHandler.MEM_HIT_EXTRA);
+	    		else if (onDisk) notifySomething(object, null, RemoteLoaderHandler.DISK_HIT_EXTRA);
+	    		// At this point, the object can still be null
+	    	}
+	    	
+	    	// Checks if the object was already got
+	    	if (object == null) {
+	    		// Gets the object from the network
+	    		object = downloadObject();
+		    	// NET_HIT if found in network cache
+		    	if (object != null) notifySomething(object, null, RemoteLoaderHandler.NET_HIT_EXTRA);
+		    	// NET_MISS if not found in network cache
+		    	else notifySomething(object, null, RemoteLoaderHandler.NET_MISS_EXTRA);
+	    	}
+    	} catch (Throwable e) {
+    		// ERROR if there's an exception and the object is not found
+    	}
 
-        if (cache != null) {
-            // at this point we know the image is not in memory, but it could be cached to SD card
-            bitmap = cache.getBitmap(resourceUrl);
-        }
-
-        if (bitmap == null) {
-            bitmap = downloadImage();
-        }
-
-        notifyImageLoaded(resourceUrl, bitmap);
+		if (object == null) notifySomething(
+				null, new Exception("Object was not found."), 
+				RemoteLoaderHandler.ERROR_EXTRA);
+        
+        // AFTER is automatically called by the success/error methods.
     }
+    
 
     // TODO: we could probably improve performance by re-using connections instead of closing them
     // after each and every download
-    protected Bitmap downloadImage() {
+    protected byte[] downloadObject() {
         int timesTried = 1;
-
+        
+        // Tries to download for a few times, if set
         while (timesTried <= numRetries) {
             try {
-                byte[] imageData = retrieveImageData();
+                byte[] data = retrieveData();
 
-                if (imageData == null) {
+                if (data == null) {
                     break;
                 }
 
                 if (cache != null) {
-                    cache.put(resourceUrl, imageData);
+                    cache.put(resourceUrl, data);
                 }
 
-                return BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
+                return data;
 
             } catch (Throwable e) {
                 Log.w(LOG_TAG, "download for " + resourceUrl + " failed (attempt " + timesTried + ")");
@@ -98,14 +130,15 @@ public class RemoteLoaderJob implements Runnable {
 
         return null;
     }
+    
 
-    protected byte[] retrieveImageData() throws IOException {
+    protected byte[] retrieveData() throws IOException {
         URL url = new URL(resourceUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
         // determine the image size and allocate a buffer
         int fileSize = connection.getContentLength();
-        Log.d(LOG_TAG, "fetching image " + resourceUrl + " (" + (fileSize <= 0 ? "size unknown" : Integer.toString(fileSize)) + ")");
+        Log.d(LOG_TAG, "fetching " + resourceUrl + " (" + (fileSize <= 0 ? "size unknown" : Integer.toString(fileSize)) + ")");
 
         BufferedInputStream istream = new BufferedInputStream(connection.getInputStream());
 
@@ -124,15 +157,15 @@ public class RemoteLoaderJob implements Runnable {
                 }
                 return buf.toByteArray();
             } else {
-                byte[] imageData = new byte[fileSize];
+                byte[] data = new byte[fileSize];
         
                 int bytesRead = 0;
                 int offset = 0;
                 while (bytesRead != -1 && offset < fileSize) {
-                    bytesRead = istream.read(imageData, offset, fileSize - offset);
+                    bytesRead = istream.read(data, offset, fileSize - offset);
                     offset += bytesRead;
                 }
-                return imageData;
+                return data;
             }
         } finally {
             // clean up
@@ -143,15 +176,20 @@ public class RemoteLoaderJob implements Runnable {
         }
     }
 
-    protected void notifyImageLoaded(String url, Bitmap bitmap) {
+
+    protected void notifySomething(byte[] object, Throwable e, String messageType) {
+    	// Create a message
         Message message = new Message();
         message.what = RemoteLoaderHandler.HANDLER_MESSAGE_ID;
         Bundle data = new Bundle();
-        data.putString(RemoteLoaderHandler.IMAGE_URL_EXTRA, url);
-        Bitmap image = bitmap;
-        data.putParcelable(RemoteLoaderHandler.BITMAP_EXTRA, image);
+        
+        // Sets the message type
+        data.putString(RemoteLoaderHandler.TYPE_EXTRA, messageType);
+        data.putByteArray(RemoteLoaderHandler.OBJECT_EXTRA, object);
+        data.putSerializable(RemoteLoaderHandler.EXCEPTION_EXTRA, e);
+        
+        // Set the data and send the message to the handler
         message.setData(data);
-
         handler.sendMessage(message);
     }
 }

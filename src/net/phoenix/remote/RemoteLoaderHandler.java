@@ -36,6 +36,7 @@ public class RemoteLoaderHandler extends Handler {
 	
     public static final int HANDLER_MESSAGE_ID = 0;
     public static final String OBJECT_EXTRA = "ign:extra_object";
+    public static final String EXCEPTION_EXTRA = "ign:extra_exception";
     public static final String URL_EXTRA = "ign:extra_url";
     public static final String TYPE_EXTRA = "ign:extra_type";
     
@@ -52,18 +53,18 @@ public class RemoteLoaderHandler extends Handler {
 
     private String resourceUrl;
 
-    public RemoteLoaderHandler(String imageUrl) {
-        this.resourceUrl = imageUrl;
-        init(imageUrl);
+    public RemoteLoaderHandler(String resUrl) {
+        this.resourceUrl = resUrl;
+        init(resUrl);
     }
 
-    public RemoteLoaderHandler(Looper looper, String imageUrl) {
+    public RemoteLoaderHandler(Looper looper, String resUrl) {
         super(looper);
-        init(imageUrl);
+        init(resUrl);
     }
 
-    private void init(String imageUrl) {
-        this.resourceUrl = imageUrl;
+    private void init(String resUrl) {
+        this.resourceUrl = resUrl;
     }
 
     @Override
@@ -72,27 +73,39 @@ public class RemoteLoaderHandler extends Handler {
             handleLoadedMessage(msg);
         }
     }
-
+    
+    /**
+     * Handles a message from the runnable. Depending on the type of message,
+     * the proper callback is called.
+     * You should not override this, override the callback methods instead.
+     * 
+     * @param msg The message sent by the Runnable.
+     */
     protected final void handleLoadedMessage(Message msg) {
         Bundle data = msg.getData();
         
         String extraType = data.getString(TYPE_EXTRA);
         byte[] object = data.getByteArray(OBJECT_EXTRA);
-        handleLoaded(object, msg);
-    }
-
-    /**
-     * Override this method if you need custom handler logic. Note that this method can actually be
-     * called directly for performance reasons, in which case the message will be null
-     * 
-     * @param object
-     *            the object returned from the loader
-     * @param msg
-     *            the handler message; can be null
-     * @return TODO: add description
-     */
-    protected boolean handleLoaded(byte[] object, Message msg) {
-        return true;
+        
+        if (extraType == BEFORE_EXTRA) {
+        	before();
+        } else if (extraType == MEM_HIT_EXTRA) {
+        	onMemoryHit(object);
+        } else if (extraType == MEM_MISS_EXTRA) {
+        	onMemoryMiss();
+        } else if (extraType == DISK_HIT_EXTRA) {
+        	onDiskHit(object);
+        } else if (extraType == DISK_MISS_EXTRA) {
+        	onDiskMiss();
+        } else if (extraType == NET_HIT_EXTRA) {
+        	onNetHit(object);
+        } else if (extraType == NET_MISS_EXTRA) {
+        	onNetMiss();
+        } else if (extraType == SUCCESS_EXTRA) {
+        	success(object);
+        } else if (extraType == ERROR_EXTRA) {
+        	error((Exception) data.get(EXCEPTION_EXTRA));
+        }
     }
     
     /**
@@ -166,14 +179,14 @@ public class RemoteLoaderHandler extends Handler {
      * @param object The object returned, or null if none was found.
      */
     protected void after(byte[] object) {
-    	Log.d(TAG, "Got a resource for key: " + resourceUrl);
+    	Log.d(TAG, "The RemoteLoader has finished working for key: " + resourceUrl);
     };
 
-    public String getImageUrl() {
+    public String getResourceUrl() {
         return resourceUrl;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.resourceUrl = imageUrl;
+    public void setResourceUrl(String resUrl) {
+        this.resourceUrl = resUrl;
     }
 }
