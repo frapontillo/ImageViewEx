@@ -4,5 +4,7 @@
     <string name="hello">Hello World, ImageViewExActivity!</string>
     <string name="app_name">ImageViewEx</string>
     <string name="app_name2">ImageViewOGLEx</string>
+    <string name="stocazzo">stocazzo</string>
+    <string name="imageinfo">Image size: %1$sx%2$s\nFrames: %3$s\nCurrent frame: %4$s</string>
 
 </resources>

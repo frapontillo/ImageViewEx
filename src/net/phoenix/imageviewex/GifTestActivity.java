@@ -3,27 +3,33 @@ package net.phoenix.imageviewex;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-public class ImageViewExOGLActivity extends Activity {
-    private ImageViewExOGL img;
+/**
+ * Autore: rock3r
+ * Creato il 27/05/12 alle 19.33
+ */
+public class GifTestActivity extends Activity {
 
-	/** Called when the activity is first created. */
+    private static final String TAG = GifTestActivity.class.getSimpleName();
+
+    private ImageView imageView;
+
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main_ogl);
-           
+        setContentView(R.layout.main_gif);
+
         // Displays some stats about density
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         TextView textview = (TextView)findViewById(R.id.textview);
         textview.setText(String.format("Density: %f; DensityDpi: %d; ScaledDensity: %f; Pixel size: %d x %d",
-        dm.density, dm.densityDpi, dm.scaledDensity, dm.widthPixels, dm.heightPixels));
-        
-        img = (ImageViewExOGL)findViewById(R.id.imageViewExOGL);
+                dm.density, dm.densityDpi, dm.scaledDensity, dm.widthPixels, dm.heightPixels));
 
-        // Sets the sources of ImageViewExs as byte arrays
-        img.setSource(R.drawable.test_texture);
+        imageView = (ImageView)findViewById(R.id.imageView);
+
+
     }
 }
