@@ -40,7 +40,7 @@ public abstract class Converters {
             opts.inScaled = false;
         }
         Bitmap bmp = BitmapFactory.decodeByteArray(image, 0, image.length, opts);
-        bmp.setDensity(DisplayMetrics.DENSITY_HIGH);
+        // bmp.setDensity(DisplayMetrics.DENSITY_HIGH);
         return new BitmapDrawable(context.getResources(), bmp);
     }
 

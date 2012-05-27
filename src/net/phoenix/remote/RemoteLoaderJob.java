@@ -135,7 +135,8 @@ public class RemoteLoaderJob implements Runnable {
     protected byte[] retrieveData() throws IOException {
         URL url = new URL(resourceUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
+        connection.connect();
+        
         // determine the image size and allocate a buffer
         int fileSize = connection.getContentLength();
         Log.d(LOG_TAG, "fetching " + resourceUrl + " (" + (fileSize <= 0 ? "size unknown" : Integer.toString(fileSize)) + ")");

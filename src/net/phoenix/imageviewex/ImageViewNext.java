@@ -6,6 +6,7 @@ import net.phoenix.remote.RemoteLoaderHandler;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
+import android.util.AttributeSet;
 
 /**
  * Extension of the ImageViewEx that handles the download and caching of 
@@ -29,6 +30,16 @@ public class ImageViewNext extends ImageViewEx {
 	private Drawable errorD;
 	private static Drawable classErrorD;
 
+	/**
+     * Creates an instance for the class.
+     *
+     * @param context	The context to initialize the instance into.
+     * @param attrs		The parameters to initialize the instance with.
+     */
+    public ImageViewNext(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+	
 	/**
 	 * Sets the loading {@link Drawable} to be used for every {@link ImageViewNext}.
 	 * @param classLoadingDrawable 	the {@link Drawable} to display after an error
@@ -97,8 +108,8 @@ public class ImageViewNext extends ImageViewEx {
 	 * Sets the {@link RemoteLoader} for this class.
 	 * @param loader {@link RemoteLoader} for the class.
 	 */
-	public void setClassLoader(RemoteLoader classLoader) {
-		this.classLoader = classLoader;
+	public static void setClassLoader(RemoteLoader classLoader) {
+		ImageViewNext.classLoader = classLoader;
 	}
 	
 	/**
@@ -130,14 +141,9 @@ public class ImageViewNext extends ImageViewEx {
 	 * 
 	 * @param url The URL to download the image from. It can be an animated GIF.
 	 * @return The {@link RemoteLoaderHandler} used to handle callbacks to the UI.
-	 * @throws Exception If a {@link RemoteLoader} has not been set for this instance.
 	 */
-	public RemoteLoaderHandler setUrl(String url) throws Exception {
+	public RemoteLoaderHandler setUrl(String url) {
 		RemoteLoaderHandler handler = new RemoteLoaderHandlerNext(url);
-		
-		if (!isLoaderSet()) {
-			throw new Exception("A RemoteLoader has not been set for this instance.");
-		}
 		
 		getLoader().load(url, handler);
 		
@@ -160,11 +166,11 @@ public class ImageViewNext extends ImageViewEx {
 			super(resUrl);
 		}
 		
-		@Override
+		@Override 
 		protected void success(byte[] object) {
 			super.success(object);
 			if (object != null) {
-				// TODO: handle the image setting
+				setSource(object);
 			}
 		}
 		

@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory.Options;
 import android.graphics.Canvas;
 import android.graphics.Movie;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
@@ -33,7 +34,7 @@ public class ImageViewEx extends ImageView {
 
     private static final String TAG = ImageViewEx.class.getSimpleName();
     private static boolean canAlwaysAnimate = true;
-    private float mScale;
+    private float mScale = -1;
 
     private static final int IMAGE_SOURCE_UNKNOWN = -1;
     private static final int IMAGE_SOURCE_RESOURCE = 0;
@@ -216,24 +217,13 @@ public class ImageViewEx extends ImageView {
     	return true;
     }
     
-    /**
-     * Helper to {@link #setOptions(Options)} that simply sets the inDensity for
-     * loaded image.
-     * Currently not used.
-     *
-     * @param inDensity The input density. This should be the current (or desired)
-     *                  screen density.
-     * @see ImageViewEx#setOptions(Options)
-     */
-    public void setInDensity(int inDensity) {
-        if (mOptions == null) {
-            Log.d(TAG, "BitmapFactory Options not created yet. Creating...");
-            mOptions = new BitmapFactory.Options();
-            mOptions.inDither = true;
-            mOptions.inScaled = true;
-            mOptions.inTargetDensity = getContext().getResources().getDisplayMetrics().densityDpi;
-            mOptions.inDensity = inDensity;
-        }
+    public float getScale() {
+    	float targetDensity = getContext().getResources().getDisplayMetrics().densityDpi;
+    	float displayThisDensity = getDensity();
+    	mScale = targetDensity / displayThisDensity;
+    	if (mScale < 0.1f) mScale = 0.1f;
+        if (mScale > 5.0f) mScale = 5.0f;
+        return mScale;
     }
 
     /**
@@ -313,9 +303,9 @@ public class ImageViewEx extends ImageView {
             // If not a gif and if on Android 3+, enable HW acceleration
             if (Build.VERSION.SDK_INT >= 11)
                 setLayerType(View.LAYER_TYPE_HARDWARE, null);
-            
             // Sets the image as a regular Drawable
             setTag(null);
+            
             Drawable d = Converters.byteArrayToDrawable(src, mOptions, getContext());
             this.setImageDrawable(d);
             this.measure(0, 0);
@@ -545,15 +535,19 @@ public class ImageViewEx extends ImageView {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     	// Initialize the attributes with the current density
     	// (if a density can't be obtained, defaults to HDPI)
-        setInDensity(getDensity());
+        // setInDensity(getDensity());
+        
+        // mScale = getScale();
 
         // If needed, get the scaling factor
-        mScale = 1.0f;
-        if (mOptions.inScaled) {
-            mScale = (float) mOptions.inTargetDensity / mOptions.inDensity;
-            if (mScale < 0.1f) mScale = 0.1f;
-            if (mScale > 5.0f) mScale = 5.0f;
-        }
+//        mScale = 1.0f;
+//        if (mOptions.inScaled) {
+//            mScale = (float) mOptions.inTargetDensity / mOptions.inDensity;
+//            if (mScale < 0.1f) mScale = 0.1f;
+//            if (mScale > 5.0f) mScale = 5.0f;
+//        }
+        
+        mScale = getScale();
         
         setMeasuredDimension(measureWidth(widthMeasureSpec), measureHeight(heightMeasureSpec));
     }
@@ -639,13 +633,13 @@ public class ImageViewEx extends ImageView {
      * 
      * @param fixedDensity the new density the view has to use.
      */
-    public void overrideDensity(int fixedDensity) {
+    public void setDensity(int fixedDensity) {
     	overriddenDensity = fixedDensity;
     }
 
     /**
      * Gets the set density of the view, given by the screen density or by value
-     * overridden with {@link #overrideDensity(int)}.
+     * overridden with {@link #setDensity(int)}.
      * If the density was not overridden and it can't be retrieved by the context,
      * it simply returns the DENSITY_HIGH constant.
      * 
@@ -654,27 +648,22 @@ public class ImageViewEx extends ImageView {
     public int getDensity() {
         int density;
         
-        // If a class level density has been set, set every image to that density
-        if (isClassLevelDensitySet()) {
+        // If a custom instance density was set, set the image to this density
+        if (overriddenDensity > 0) {
+        	density = overriddenDensity;
+        } else if (isClassLevelDensitySet()) {
+        	// If a class level density has been set, set every image to that density
         	density = getClassLevelDensity();
-        } else
-        // If there's no class level density set, check for an overridden instance density
-        // and if there's none, get the one from the display
-        {
-	        // If the instance density was not overridden, get the one from the display
-	        if (overriddenDensity == -1) {
-		        DisplayMetrics metrics = new DisplayMetrics();
-		
-		        if (!(getContext() instanceof Activity)) {
-		        	density = DisplayMetrics.DENSITY_HIGH;
-		        } else {
-		            Activity activity = (Activity) getContext();
-		            activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-		            density = metrics.densityDpi;
-		        }
+        } else {
+        	 // If the instance density was not overridden, get the one from the display
+	        DisplayMetrics metrics = new DisplayMetrics();
+	
+	        if (!(getContext() instanceof Activity)) {
+	        	density = DisplayMetrics.DENSITY_HIGH;
 	        } else {
-	        	// Else the density is the overridden one
-	        	density = overriddenDensity;
+	            Activity activity = (Activity) getContext();
+	            activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+	            density = metrics.densityDpi;
 	        }
         }
         
