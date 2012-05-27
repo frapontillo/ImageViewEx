@@ -1,9 +1,5 @@
 package net.phoenix.imageviewex;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -13,6 +9,10 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
 import android.util.Log;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Converters class, it's abstract and all of its methods are static.
@@ -76,7 +76,7 @@ public abstract class Converters {
     /**
      * Converts a Drawable into a byte array.
      *
-     * @param image 	The Drawable to convertLa Drawable da convertire.
+     * @param image 	The Drawable to convert.
      * @return			The byte array representing the Drawable (compressed in PNG).
      */
     public static byte[] drawableToByteArray(Drawable image) {
@@ -109,5 +109,15 @@ public abstract class Converters {
 		}
 		
     	return image;
+    }
+
+    /**
+     * Converts a Drawable into a Bitmap.
+     *
+     * @param drawable 	The Drawable to convert.
+     * @return			The resulting bitmap (compressed in PNG).
+     */
+    public static Bitmap drawableToBitmap(Drawable drawable, Options options) {
+        return byteArrayToBitmap(drawableToByteArray(drawable), options);
     }
 }

@@ -3,5 +3,6 @@
 
     <string name="hello">Hello World, ImageViewExActivity!</string>
     <string name="app_name">ImageViewEx</string>
+    <string name="app_name2">ImageViewOGLEx</string>
 
 </resources>
