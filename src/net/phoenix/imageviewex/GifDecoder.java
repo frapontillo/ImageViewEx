@@ -5,7 +5,6 @@ import android.graphics.Bitmap.Config;
 import android.graphics.Rect;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.InputStream;
 
 /**
@@ -13,7 +12,7 @@ import java.io.InputStream;
  * <br><pre>
  * Example:
  *    GifDecoder d = new GifDecoder();
- *    d.read("sample.gif");
+ *    d.readByte("sample.gif");
  *    int n = d.getFrameCount();
  *    for (int i = 0; i < n; i++) {
  *       BufferedImage frame = d.getFrame(i);  // frame i
@@ -338,6 +337,33 @@ public class GifDecoder extends Thread {
         return null;
     }
 
+    /**
+     * Gets the image width in pixels.
+     *
+     * @return Returns the image width in pixels.
+     */
+    public int getImageWidth() {
+        return mWidth;
+    }
+
+    /**
+     * Gets the image height in pixels.
+     *
+     * @return Returns the image height in pixels.
+     */
+    public int getImageHeight() {
+        return mHeight;
+    }
+
+    /**
+     * Gets the image pixel aspect ratio (PAR).
+     *
+     * @return Returns the image pixel aspect ratio.
+     */
+    public int getPixelAR() {
+        return mPixelAR;
+    }
+
 
 
     //////////////////////////////////////////////
@@ -345,10 +371,11 @@ public class GifDecoder extends Thread {
     //////////////////////////////////////////////
 
     /**
+     * Decode image data and build the current Bitmap.
      *   TODO: check this pile of crap
      */
     private void setPixels() {
-        int[] dest = new int[getWidth() * getImageHeight()];
+        int[] dest = new int[getImageWidth() * getImageHeight()];
         // fill in starting image contents based on last image's dispose code
         if (mLastDisposeCode > 0) {
             if (mLastDisposeCode == 3) {
@@ -361,7 +388,7 @@ public class GifDecoder extends Thread {
                 }
             }
             if (mLastImg != null) {
-                mLastImg.getPixels(dest, 0, getWidth(), 0, 0, getWidth(), getImageHeight());
+                mLastImg.getPixels(dest, 0, getImageWidth(), 0, 0, getImageWidth(), getImageHeight());
                 // copy pixels
                 if (mLastDisposeCode == 2) {
                     // fill last image rect area with background color
@@ -370,7 +397,7 @@ public class GifDecoder extends Thread {
                         c = mLastBgColor;
                     }
                     for (int i = 0; i < mLastHeight; i++) {
-                        int n1 = (mLastY + i) * getWidth() + mLastX;
+                        int n1 = (mLastY + i) * getImageWidth() + mLastX;
                         int n2 = n1 + mLastWidth;
                         for (int k = n1; k < n2; k++) {
                             dest[k] = c;
@@ -407,11 +434,11 @@ public class GifDecoder extends Thread {
             }
             line += mCurrY;
             if (line < getImageHeight()) {
-                int k = line * getWidth();
+                int k = line * getImageWidth();
                 int dx = k + mCurrX; // start of line in dest
                 int dlim = dx + mCurrWidth; // end of dest line
-                if ((k + getWidth()) < dlim) {
-                    dlim = k + getWidth(); // past dest edge
+                if ((k + getImageWidth()) < dlim) {
+                    dlim = k + getImageWidth(); // past dest edge
                 }
                 int sx = i * mCurrWidth; // start of line in source
                 while (dx < dlim) {
@@ -426,7 +453,7 @@ public class GifDecoder extends Thread {
             }
         }
 
-        mCurrImg = Bitmap.createBitmap(dest, getWidth(), getImageHeight(), Config.ARGB_4444);
+        mCurrImg = Bitmap.createBitmap(dest, getImageWidth(), getImageHeight(), Config.ARGB_4444);
     }
 
 
@@ -533,10 +560,10 @@ public class GifDecoder extends Thread {
      * @return Returns a parsing status.
      */
     private int readStream() {
-        init();
+        initParsing();
         if (mInputStream != null) {
             readHeader();
-            if (!err()) {
+            if (!isNotParsing()) {
                 readContents();
                 if (mFramesCount < 0) {
                     mStatus = STATUS_FORMAT_ERROR;
@@ -559,6 +586,9 @@ public class GifDecoder extends Thread {
         return getStatus();
     }
 
+    /**
+     * Decodes an LZW-encoded image data.
+     */
     private void decodeImageData() {
         int NullCode = -1;
         int npix = mCurrWidth * mCurrHeight;
@@ -577,7 +607,7 @@ public class GifDecoder extends Thread {
             mPixelStack = new byte[MAX_STACK_SIZE + 1];
         }
         // Initialize GIF data stream decoder.
-        data_size = read();
+        data_size = readByte();
         clear = 1 << data_size;
         end_of_information = clear + 1;
         available = clear + 2;
@@ -668,11 +698,19 @@ public class GifDecoder extends Thread {
         }
     }
 
-    private boolean err() {
+    /**
+     * Gets a value indicating wether the parsing is in progress.
+     *
+     * @return Returns true if the decoder is parsing an image, else false.
+     */
+    private boolean isNotParsing() {
         return getStatus() != STATUS_PARSING;
     }
 
-    private void init() {
+    /**
+     * Sets the decoder status and prepares it for parsing.
+     */
+    private void initParsing() {
         mStatus = STATUS_PARSING;
         mFramesCount = 0;
         mFirstGifFrame = null;
@@ -680,10 +718,16 @@ public class GifDecoder extends Thread {
         mLct = null;
     }
 
-    private int read() {
+    /**
+     * Reads a single byte from the input stream.
+     *
+     * @return Returns a single byte from the input stream.
+     *         Sets the status to STATUS_FORMAT_ERROR if the
+     *         reading fails.
+     */
+    private int readByte() {
         int curByte = 0;
         try {
-
             curByte = mInputStream.read();
         } catch (Exception e) {
             mStatus = STATUS_FORMAT_ERROR;
@@ -691,9 +735,14 @@ public class GifDecoder extends Thread {
         return curByte;
     }
 
-
+    /**
+     * Reads a data block starting at the current position from the
+     * input stream.
+     *
+     * @return Returns the number of read bytes.
+     */
     private int readBlock() {
-        mBlockSize = read();
+        mBlockSize = readByte();
         int n = 0;
         if (mBlockSize > 0) {
             try {
@@ -715,8 +764,14 @@ public class GifDecoder extends Thread {
         return n;
     }
 
-    private int[] readColorTable(int ncolors) {
-        int nbytes = 3 * ncolors;
+    /**
+     * Reads a color table from the input stream.
+     *
+     * @param colorsCount The number of colors in the table.
+     * @return Returns the color table contents.
+     */
+    private int[] readColorTable(int colorsCount) {
+        int nbytes = 3 * colorsCount;
         int[] tab = null;
         byte[] c = new byte[nbytes];
         int n = 0;
@@ -731,7 +786,7 @@ public class GifDecoder extends Thread {
             tab = new int[256]; // max size to avoid bounds checks
             int i = 0;
             int j = 0;
-            while (i < ncolors) {
+            while (i < colorsCount) {
                 int r = ((int) c[j++]) & 0xff;
                 int g = ((int) c[j++]) & 0xff;
                 int b = ((int) c[j++]) & 0xff;
@@ -741,17 +796,20 @@ public class GifDecoder extends Thread {
         return tab;
     }
 
+    /**
+     * Read a Gif image contents from the input stream.
+     */
     private void readContents() {
         // read GIF file content blocks
         boolean done = false;
-        while (!(done || err())) {
-            int code = read();
+        while (!(done || isNotParsing())) {
+            int code = readByte();
             switch (code) {
                 case 0x2C: // image separator
                     readImage();
                     break;
                 case 0x21: // extension
-                    code = read();
+                    code = readByte();
                     switch (code) {
                         case 0xf9: // graphics control extension
                             readGraphicControlExt();
@@ -783,41 +841,50 @@ public class GifDecoder extends Thread {
         }
     }
 
+    /**
+     * Reads a Craphic Control Extension from the input stream.
+     */
     private void readGraphicControlExt() {
-        read(); // block size
-        int packed = read(); // packed fields
+        readByte(); // block size
+        int packed = readByte(); // packed fields
         mDisposeCode = (packed & 0x1c) >> 2; // disposal method
         if (mDisposeCode == 0) {
             mDisposeCode = 1; // elect to keep old image if discretionary
         }
         mTransparency = (packed & 1) != 0;
         mFrameDuration = readShort() * 10; // delay in milliseconds
-        mTranspIndex = read(); // transparent color index
-        read(); // block terminator
+        mTranspIndex = readByte(); // transparent color index
+        readByte(); // block terminator
     }
 
+    /**
+     * Reads a Gif image header from the stream.
+     */
     private void readHeader() {
         String id = "";
         for (int i = 0; i < 6; i++) {
-            id += (char) read();
+            id += (char) readByte();
         }
         if (!id.startsWith("GIF")) {
             mStatus = STATUS_FORMAT_ERROR;
             return;
         }
         readLSD();
-        if (mGctUsedFlag && !err()) {
+        if (mGctUsedFlag && !isNotParsing()) {
             mGct = readColorTable(mGctSize);
             mBgColor = mGct[mBgColorIndex];
         }
     }
 
+    /**
+     * Reads an image from the input stream.
+     */
     private void readImage() {
         mCurrX = readShort(); // (sub)image position & size
         mCurrY = readShort();
         mCurrWidth = readShort();
         mCurrHeight = readShort();
-        int packed = read();
+        int packed = readByte();
         mLctFlag = (packed & 0x80) != 0; // 1 - local color table flag
         mInterlaced = (packed & 0x40) != 0; // 2 - interlace flag
         // 3 - sort flag
@@ -840,40 +907,29 @@ public class GifDecoder extends Thread {
         if (mAct == null) {
             mStatus = STATUS_FORMAT_ERROR; // no color table defined
         }
-        if (err()) {
+        if (isNotParsing()) {
             return;
         }
         decodeImageData(); // decode pixel data
         skip();
-        if (err()) {
+        if (isNotParsing()) {
             return;
         }
         mFramesCount++;
         // create new image to receive frame data
-        mCurrImg = Bitmap.createBitmap(getWidth(), getImageHeight(), Config.ARGB_4444);
+        mCurrImg = Bitmap.createBitmap(getImageWidth(), getImageHeight(), Config.ARGB_4444);
         // createImage(width, height);
         setPixels(); // transfer pixel data to image
         if (mFirstGifFrame == null) {
-            if (cacheImage) {
-                String name = getDir();
-                mFirstGifFrame = new GifFrame(imagePath + File.separator + name + ".png", mFrameDuration);
-                saveImage(mCurrImg, name);
-            } else {
-                mFirstGifFrame = new GifFrame(mCurrImg, mFrameDuration);
-            }
+            mFirstGifFrame = new GifFrame(mCurrImg, mFrameDuration);
             mCurrentFrame = mFirstGifFrame;
         } else {
             GifFrame f = mFirstGifFrame;
             while (f.nextFrame != null) {
                 f = f.nextFrame;
             }
-            if (cacheImage) {
-                String name = getDir();
-                f.nextFrame = new GifFrame(imagePath + File.separator + name + ".png", mFrameDuration);
-                saveImage(mCurrImg, name);
-            } else {
-                f.nextFrame = new GifFrame(mCurrImg, mFrameDuration);
-            }
+
+            f.nextFrame = new GifFrame(mCurrImg, mFrameDuration);
         }
         // frames.addElement(new GifFrame(mCurrImg, mFrameDuration)); // add mCurrImg to frame
         // list
@@ -884,20 +940,26 @@ public class GifDecoder extends Thread {
         mParsingListener.onGifParsingCompleted(true, mFramesCount);
     }
 
+    /**
+     * Reads a Logical Screen Descriptor from the input stream.
+     */
     private void readLSD() {
         // logical screen size
         mWidth = readShort();
         mHeight = readShort();
         // packed fields
-        int packed = read();
+        int packed = readByte();
         mGctUsedFlag = (packed & 0x80) != 0; // 1 : global color table flag
         // 2-4 : color resolution
         // 5 : gct sort flag
         mGctSize = 2 << (packed & 7); // 6-8 : gct size
-        mBgColorIndex = read(); // background color index
-        mPixelAR = read(); // pixel aspect ratio
+        mBgColorIndex = readByte(); // background color index
+        mPixelAR = readByte(); // pixel aspect ratio
     }
 
+    /**
+     * Reads a Netscape Extension block from the input stream.
+     */
     private void readNetscapeExt() {
         do {
             readBlock();
@@ -907,14 +969,22 @@ public class GifDecoder extends Thread {
                 int b2 = ((int) mBlock[2]) & 0xff;
                 mLoopCount = (b2 << 8) | b1;
             }
-        } while ((mBlockSize > 0) && !err());
+        } while ((mBlockSize > 0) && !isNotParsing());
     }
 
+    /**
+     * Reads a 16-bit integer from the input stream.
+     *
+     * @return Returns a 16-bit integer read from the stream.
+     */
     private int readShort() {
         // read 16-bit value, LSB first
-        return read() | (read() << 8);
+        return readByte() | (readByte() << 8);
     }
 
+    /**
+     * Resets the current frame.
+     */
     private void resetFrame() {
         mLastDisposeCode = mDisposeCode;
         mLastX = mCurrX;
@@ -930,23 +1000,11 @@ public class GifDecoder extends Thread {
     }
 
     /**
-     * Skips variable length blocks up to and including next zero length block.
+     * Skips variable length blocks up to and including the next zero length block.
      */
     private void skip() {
         do {
             readBlock();
-        } while ((mBlockSize > 0) && !err());
-    }
-
-    public int getWidth() {
-        return mWidth;
-    }
-
-    public int getImageHeight() {
-        return mHeight;
-    }
-
-    public int getPixelAR() {
-        return mPixelAR;
+        } while ((mBlockSize > 0) && !isNotParsing());
     }
 }
