@@ -21,21 +21,21 @@ This library requires Android **API level 8** (Android 2.2) as minimum, and targ
 In your project you need to include:
 
  * [ignition-support](https://github.com/kaeppler/ignition) library, a nice collection of caching and downloading helpers ImageViewEx (and ImageViewNext) are based on top of
- * [guava] library, required by ignition-support's cache
+ * [guava](http://code.google.com/p/guava-libraries/) library, required by ignition-support's cache
  
 The Eclipse project included specifies this is a library project, although it provides two basic Activities for testing the extended `ImageView`s provided.
 
 For your application, you need to include the permissions specified in the AndroidManifest of the library, which are:
 
- * android.permission.INTERNET for getting images on the internet
- * android.permission.ACCESS_NETWORK_STATE to monitor the network state
- * android.permission.WRITE_EXTERNAL_STORAGE for making the cache access and write the SD card
+ * `android.permission.INTERNET for getting` images on the internet
+ * `android.permission.ACCESS_NETWORK_STATE` to monitor the network state
+ * `android.permission.WRITE_EXTERNAL_STORAGE` for making the cache access and write the SD card
  
-**Documentation
+##Documentation
 This is a brief documentation of the classes, methods and views included in this library
 
 ###BytesCache
-**`BytesCache`** is an extension of ignition's `AbstractCache` and is basically a cache useful for storing any `byte[]` (byte array) and accessing them by a `String` key.
+`**BytesCache**` is an extension of ignition's `AbstractCache` and is basically a cache useful for storing any `byte[]` (byte array) and accessing them by a `String` key.
 
 It does nothing more than overriding some methods from `AbstractCache` so that any value is stored as a `byte[]`. Please, refer to ignition's documentation for futher instructions on how to use this simple caching system.
 
@@ -43,7 +43,7 @@ It does nothing more than overriding some methods from `AbstractCache` so that a
 `ImageViewEx` is an extended `ImageView` that supports some additional methods for your every-day life.
 
 ####Animated GIF
-The best thing about `ImageViewEx` is its automatic handling of animated GIF images starting from a simple `byte[]`.
+The best thing about `ImageViewEx` is its **automatic handling of animated GIF images** starting from a simple `byte[]`.
 
 Simply call `img.setSource(mGIF)` and see your GIF animating. Note that there may be some issues under some conditions (see [Known issues and workarounds](#known-issues-and-workarounds)).
 
@@ -64,7 +64,7 @@ Accessory methods are:
 ####Conditional animation
 As mentioned earlier, you may not want to animate some GIF under some conditions.
 
-So we've provided you with a conditional method that gets triggered just before each animation begins, `boolean canAnimate()`. This method should be overridden with your custom implementation. By default, it always returns `true`. This method decides whether animations can be started for this instance of `ImageViewEx`.
+So we've provided you with a **conditional method** that gets triggered just before each animation begins, `boolean canAnimate()`. This method should be overridden with your custom implementation. By default, it always returns `true`. This method decides whether animations can be started for this instance of `ImageViewEx`.
 
 If you don't want to have another class extending `ImageViewEx` and your `canAnimate()` returns the same value throughout your application, you can use the following
 
@@ -77,7 +77,7 @@ to specify you never want to animate GIFs. If you don't set any value to `setCan
 You can check the behavior by calling the `static boolean getCanAlwaysAnimate()` method.
 
 ####Density Level
-You can set a specific density to simulate for every instance of `ImageViewEx` by using the following methods:
+You can set a **specific density to simulate** for every instance of `ImageViewEx` by using the following methods:
 
  * `static void setClassLevelDensity(int classLevelDensity)` to set a specific density for every image
  * `static void removeClassLevelDensity()` to remove the class-level customization
@@ -118,10 +118,10 @@ You can even set a density for just one of your `ImageViewEx`s:
 ```
 
 ###RemoteLoader
-The `RemoteLoader` class, together with `RemoteLoaderJob` and `RemoteLoaderHandler` provides a simple yet extensible system to handle data download and caching, by using the ignition-support library and the `BytesCache` provided with this library.
+The `RemoteLoader` class, together with `RemoteLoaderJob` and `RemoteLoaderHandler` **provides a simple yet extensible system to handle data download and caching**, by using the ignition-support library and the `BytesCache` provided with this library.
 It is an abstraction of the RemoteImageLoader provided in the ignition-support library, edited in such a way that it can handle any kind of file.
 
-It realizes a background loader that downloads any data from a URL, optionally backed by a two-level FIFO cache. A thread from a thread pool will be used to download the data in the background and call the appropriate callbacks of a handler.
+It realizes a **background loader that downloads any data from a URL, optionally backed by a two-level FIFO cache**. A thread from a thread pool will be used to download the data in the background and call the appropriate callbacks of a handler.
 
 ###ImageViewNext
 `RemoteLoader` is used by `ImageViewNext`, an extension of `ImageViewEx` that handles **downloading, displaying and caching of images (and animated GIFs, of course)**.
