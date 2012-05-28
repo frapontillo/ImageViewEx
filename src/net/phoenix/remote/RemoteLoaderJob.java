@@ -81,6 +81,8 @@ public class RemoteLoaderJob implements Runnable {
 	    	
 	    	// Checks if the object was already got
 	    	if (object == null) {
+	    		// Delete comment line for testing
+	    		// Thread.sleep(2000);
 	    		// Gets the object from the network
 	    		object = downloadObject();
 		    	// NET_HIT if found in network cache

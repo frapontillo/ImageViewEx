@@ -1,15 +1,11 @@
 package net.phoenix.cache;
 
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
-
-import android.util.Log;
 
 import com.github.ignition.support.cache.*;
 

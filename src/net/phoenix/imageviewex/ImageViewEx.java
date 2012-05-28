@@ -4,11 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapFactory.Options;
 import android.graphics.Canvas;
 import android.graphics.Movie;
 import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
@@ -16,7 +14,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -153,13 +150,65 @@ public class ImageViewEx extends ImageView {
     }
     
     /**
+     * Sets the view's density to the one from the screen.
+     * The new density will be set on the next {@link #onMeasure(int, int)}.
+     * 
+     * @return the new density the view has to use.
+     */
+    public void dontOverrideDensity() {
+    	overriddenDensity = -1;
+    }
+    
+    /**
+     * Programmatically overrides this view's density.
+     * The new density will be set on the next {@link #onMeasure(int, int)}.
+     * 
+     * @param fixedDensity the new density the view has to use.
+     */
+    public void setDensity(int fixedDensity) {
+    	overriddenDensity = fixedDensity;
+    }
+
+    /**
+     * Gets the set density of the view, given by the screen density or by value
+     * overridden with {@link #setDensity(int)}.
+     * If the density was not overridden and it can't be retrieved by the context,
+     * it simply returns the DENSITY_HIGH constant.
+     * 
+     * @return int representing the current set density of the view.
+     */
+    public int getDensity() {
+        int density;
+        
+        // If a custom instance density was set, set the image to this density
+        if (overriddenDensity > 0) {
+        	density = overriddenDensity;
+        } else if (isClassLevelDensitySet()) {
+        	// If a class level density has been set, set every image to that density
+        	density = getClassLevelDensity();
+        } else {
+        	 // If the instance density was not overridden, get the one from the display
+	        DisplayMetrics metrics = new DisplayMetrics();
+	
+	        if (!(getContext() instanceof Activity)) {
+	        	density = DisplayMetrics.DENSITY_HIGH;
+	        } else {
+	            Activity activity = (Activity) getContext();
+	            activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+	            density = metrics.densityDpi;
+	        }
+        }
+        
+        return density;
+    }
+    
+    /**
      * Class method.
-     * Sets the canAlwaysAnimate value. If it is true, {@link #canAnimate()} will
-     * never be started and the animation will always be triggered for animated GIFs.
-     * If it is false, {@link #canAnimate()} will be always be triggered before playing
-     * an animated GIF, determining if the animation can be played in that particular
-     * instance of {@link ImageViewEx}.
-     * canAlwaysAnimate defaults to true.
+     * Sets the canAlwaysAnimate value. If it is true, {@link #canAnimate()} will be 
+     * triggered, determining if the animation can be played in that particular instance of
+     * {@link ImageViewEx}. If it is false, {@link #canAnimate()} will never be triggered
+     * and GIF animations will never start.
+     * {@link canAlwaysAnimate} defaults to true.
      * 
      * @param canAlwaysAnimate 	boolean, true to always animate for every instance of
      * 							{@link ImageViewEx}, false if you want to perform the
@@ -172,16 +221,15 @@ public class ImageViewEx extends ImageView {
     
     /**
      * Class method.
-     * Returns the canAlwaysAnimate value. If it is true, {@link #canAnimate()} will
-     * never be started and the animation will always be triggered for animated GIFs.
-     * If it is false, {@link #canAnimate()} will be always be triggered before playing
-     * an animated GIF, determining if the animation can be played in that particular
-     * instance of {@link ImageViewEx}.
-     * canAlwaysAnimate defaults to true.
+     * Returns the canAlwaysAnimate value. If it is true, {@link #canAnimate()} will be 
+     * triggered, determining if the animation can be played in that particular instance of
+     * {@link ImageViewEx}. If it is false, {@link #canAnimate()} will never be triggered
+     * and GIF animations will never start.
+     * {@link canAlwaysAnimate} defaults to true.
      * 
-     * @return 	boolean, true to always animate for every instance of {@link ImageViewEx},
-     * 			false if the decision method {@link #canAnimate()} will be performed on
-     * 			every {@link #setSource(byte[])} call.
+     * @return 	boolean, true to see if this instance can be animated by calling
+     * 			{@link #canAnimate()}, if false, animations will never be triggered and
+     * 			{@link #canAnimate()} will never be evaluated for this instance.
      */
     public static boolean getCanAlwaysAnimate() {
     	return canAlwaysAnimate;
@@ -200,11 +248,11 @@ public class ImageViewEx extends ImageView {
     
     /**
      * This method should be overridden with your custom implementation. By default,
-     * it always return {@code <code>true</code>}.
+     * it always returns {@code <code>true</code>}.
      * 
      * <p>This method decides whether animations can be started for this instance of
      * {@link ImageViewEx}. Still, if {@link #getCanAlwaysAnimate()} equals
-     * {@code <code>true</code>} this method will never be called for all of the
+     * {@code <code>false</code>} this method will never be called for all of the
      * instances of {@link ImageViewEx}.
      * 
      * @see {@link #setCanAlwaysAnimate(boolean)} to set the predefined class behavior
@@ -533,22 +581,7 @@ public class ImageViewEx extends ImageView {
      */
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    	// Initialize the attributes with the current density
-    	// (if a density can't be obtained, defaults to HDPI)
-        // setInDensity(getDensity());
-        
-        // mScale = getScale();
-
-        // If needed, get the scaling factor
-//        mScale = 1.0f;
-//        if (mOptions.inScaled) {
-//            mScale = (float) mOptions.inTargetDensity / mOptions.inDensity;
-//            if (mScale < 0.1f) mScale = 0.1f;
-//            if (mScale > 5.0f) mScale = 5.0f;
-//        }
-        
         mScale = getScale();
-        
         setMeasuredDimension(measureWidth(widthMeasureSpec), measureHeight(heightMeasureSpec));
     }
 
@@ -617,56 +650,4 @@ public class ImageViewEx extends ImageView {
         return result;
     }
     
-    /**
-     * Sets the view's density to the one from the screen.
-     * The new density will be set on the next {@link #onMeasure(int, int)}.
-     * 
-     * @return the new density the view has to use.
-     */
-    public void dontOverrideDensity() {
-    	overriddenDensity = -1;
-    }
-    
-    /**
-     * Programmatically overrides this view's density.
-     * The new density will be set on the next {@link #onMeasure(int, int)}.
-     * 
-     * @param fixedDensity the new density the view has to use.
-     */
-    public void setDensity(int fixedDensity) {
-    	overriddenDensity = fixedDensity;
-    }
-
-    /**
-     * Gets the set density of the view, given by the screen density or by value
-     * overridden with {@link #setDensity(int)}.
-     * If the density was not overridden and it can't be retrieved by the context,
-     * it simply returns the DENSITY_HIGH constant.
-     * 
-     * @return int representing the current set density of the view.
-     */
-    public int getDensity() {
-        int density;
-        
-        // If a custom instance density was set, set the image to this density
-        if (overriddenDensity > 0) {
-        	density = overriddenDensity;
-        } else if (isClassLevelDensitySet()) {
-        	// If a class level density has been set, set every image to that density
-        	density = getClassLevelDensity();
-        } else {
-        	 // If the instance density was not overridden, get the one from the display
-	        DisplayMetrics metrics = new DisplayMetrics();
-	
-	        if (!(getContext() instanceof Activity)) {
-	        	density = DisplayMetrics.DENSITY_HIGH;
-	        } else {
-	            Activity activity = (Activity) getContext();
-	            activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-	            density = metrics.densityDpi;
-	        }
-        }
-        
-        return density;
-    }
 }

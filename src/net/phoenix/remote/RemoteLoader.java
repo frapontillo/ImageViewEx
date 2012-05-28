@@ -22,8 +22,6 @@ import net.phoenix.cache.BytesCache;
 
 import android.content.Context;
 
-import com.github.ignition.support.cache.ImageCache;
-
 /**
  * Realizes a background loader that downloads any data from a URL, optionally backed by a
  * two-level FIFO cache. A thread from a thread pool will be used to download the data in the
@@ -37,7 +35,7 @@ import com.github.ignition.support.cache.ImageCache;
 public class RemoteLoader {
 
     // the default thread pool size
-    private static final int DEFAULT_POOL_SIZE = 3;
+    private static final int DEFAULT_POOL_SIZE = 30;
     // expire images after a day
     // TODO: this currently only affects the in-memory cache, so it's quite pointless
     private static final int DEFAULT_TTL_MINUTES = 24 * 60;
@@ -63,7 +61,7 @@ public class RemoteLoader {
      * @param context
      *            the current context
      * @param createCache
-     *            whether to create a default {@link ImageCache} used for caching
+     *            whether to create a default {@link BytesCache} used for caching
      */
     public RemoteLoader(Context context, boolean createCache) {
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(DEFAULT_POOL_SIZE);

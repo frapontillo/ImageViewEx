@@ -4,6 +4,7 @@ import net.phoenix.cache.BytesCache;
 import net.phoenix.remote.RemoteLoader;
 import net.phoenix.remote.RemoteLoaderHandler;
 import android.content.Context;
+import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.util.AttributeSet;
@@ -17,18 +18,15 @@ import android.util.AttributeSet;
  * 
  */
 @SuppressWarnings("rawtypes")
-public class ImageViewNext extends ImageViewEx {
-	private BytesCache cache = null;
-	private static BytesCache classCache = null;
-	
+public class ImageViewNext extends ImageViewEx {	
 	private RemoteLoader loader = null;
 	private static RemoteLoader classLoader = null;
 	
 	private Drawable loadingD;
-	private static Drawable classLoadingD;
+	private static int classLoadingResId;
 	
 	private Drawable errorD;
-	private static Drawable classErrorD;
+	private static int classErrorResId;
 
 	/**
      * Creates an instance for the class.
@@ -42,58 +40,52 @@ public class ImageViewNext extends ImageViewEx {
 	
 	/**
 	 * Sets the loading {@link Drawable} to be used for every {@link ImageViewNext}.
-	 * @param classLoadingDrawable 	the {@link Drawable} to display after an error
-	 * 								getting an image.
+	 * @param classLoadingDrawable	the {@link int} resource ID of the Drawable
+	 * 								while loading an image.
 	 */
-	public static void setClassLoadingDrawable(Drawable classLoadingDrawable) {
-		classLoadingD = classLoadingDrawable;
+	public static void setClassLoadingDrawable(int classLoadingDrawableResId) {
+		classLoadingResId = classLoadingDrawableResId;
+	}
+	
+	/**
+	 * Sets the loading {@link Drawable} to be used for this {@link ImageViewNext}.
+	 * @param loadingDrawable the {@link Drawable} to display while loading an image.
+	 */
+	public void setLoadingDrawable(Drawable loadingDrawable) {
+		loadingD = loadingDrawable;
+	}
+	
+	/**
+	 * Gets the {@link Drawable} to display while loading an image.
+	 * @return {@link Drawable} to display while loading.
+	 */
+	public Drawable getLoadingDrawable() {
+		return (loadingD != null ? loadingD : getResources().getDrawable(classLoadingResId));
 	}
 	
 	/**
 	 * Sets the error {@link Drawable} to be used for every {@link ImageViewNext}.
-	 * @param classErrorDrawable the {@link Drawable} to display waiting for an image.
+	 * @param 	classErrorDrawableResId the {@link int} resource ID of the Drawable
+	 * 			to display after an error getting an image.
 	 */
-	public static void setClassErrorDrawable(Drawable classErrorDrawable) {
-		classErrorD = classErrorDrawable;
-	}
-	
-	/**
-	 * Sets an {@link BytesCache} to use for the caching and retrieving
-	 * of images in this particular instance.
-	 * 
-	 * @param cache {@link BytesCache} to use for this instance.
-	 */
-	public void setCache(BytesCache cache) {
-		this.cache = cache;
+	public static void setClassErrorDrawable(int classErrorDrawableResId) {
+		classErrorResId = classErrorDrawableResId;
 	}
 
 	/**
-	 * Sets an {@link BytesCache} to use for the caching and retrieving
-	 * of images in all of the instances of the class.
-	 * 
-	 * @param cache {@link BytesCache} to use for this class.
+	 * Sets the error {@link Drawable} to be used for this {@link ImageViewNext}.
+	 * @param classErrorDrawable the {@link Drawable} to display after an error getting an image.
 	 */
-	public static void setClassCache(BytesCache cache) {
-		ImageViewNext.classCache = cache;
+	public void setErrorDrawable(Drawable errorDrawable) {
+		errorD = errorDrawable;
 	}
 	
 	/**
-	 * Gets the current cache set for this ImageViewEx. If a local cache has
-	 * not been set, it returns the global cache.
-	 * 
-	 * @return the cache used for this ImageViewNext, or null if none has been set.
+	 * Gets the {@link Drawable} to display after an error loading an image.
+	 * @return {@link Drawable} to display after an error loading an image.
 	 */
-	public BytesCache getCache() {
-		return (cache == null ? classCache : cache);
-	}
-	
-	/**
-	 * Checks if there is a cache for this ImageViewNext.
-	 * 
-	 * @return true if a cache has been set, false otherwise.
-	 */
-	public boolean isCacheSet() {
-		return (getCache() != null);
+	public Drawable getErrorDrawable() {
+		return (errorD != null ? errorD : getResources().getDrawable(classErrorResId));
 	}
 	
 	/**
@@ -143,7 +135,7 @@ public class ImageViewNext extends ImageViewEx {
 	 * @return The {@link RemoteLoaderHandler} used to handle callbacks to the UI.
 	 */
 	public RemoteLoaderHandler setUrl(String url) {
-		RemoteLoaderHandler handler = new RemoteLoaderHandlerNext(url);
+		RemoteLoaderHandler handler = new RemoteLoaderHandlerNext(url, this);
 		
 		getLoader().load(url, handler);
 		
@@ -157,13 +149,16 @@ public class ImageViewNext extends ImageViewEx {
 	 *
 	 */
 	protected class RemoteLoaderHandlerNext extends RemoteLoaderHandler {
+		private ImageViewNext imageViewNext = null;
 
-		public RemoteLoaderHandlerNext(Looper looper, String resUrl) {
+		public RemoteLoaderHandlerNext(Looper looper, String resUrl, ImageViewNext imageViewNext) {
 			super(looper, resUrl);
+			this.imageViewNext = imageViewNext;
 		}
 		
-		public RemoteLoaderHandlerNext(String resUrl) {
+		public RemoteLoaderHandlerNext(String resUrl, ImageViewNext imageViewNext) {
 			super(resUrl);
+			this.imageViewNext = imageViewNext;
 		}
 		
 		@Override 
@@ -177,13 +172,23 @@ public class ImageViewNext extends ImageViewEx {
 		@Override
 		protected void onMemoryMiss() {
 			super.onMemoryMiss();
-			// TODO: set the temporary animated drawable
+			Drawable loadingDrawable = getLoadingDrawable();
+			if (loadingDrawable != null) {
+				imageViewNext.setImageDrawable(loadingDrawable);
+				if (loadingDrawable instanceof AnimationDrawable)
+					((AnimationDrawable)loadingDrawable).start();
+			}
+			
 		}
 		
 		@Override
 		protected void error(Exception e) {
 			super.error(e);
-			// TODO: set the error drawable
+			Drawable errorDrawable = getErrorDrawable();
+			if (getErrorDrawable() != null)
+				imageViewNext.setImageDrawable(errorDrawable);
+				if (errorDrawable instanceof AnimationDrawable)
+					((AnimationDrawable)errorDrawable).start();
 		}
 
 	}

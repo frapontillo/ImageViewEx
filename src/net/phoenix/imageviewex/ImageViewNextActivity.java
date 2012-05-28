@@ -7,6 +7,9 @@ import android.util.DisplayMetrics;
 import android.widget.TextView;
 
 public class ImageViewNextActivity extends Activity {
+    // Create the Loader
+    private static RemoteLoader loader = null;
+    
     private ImageViewNext img1;
 	private ImageViewNext img2;
 	private ImageViewNext img3;
@@ -26,17 +29,19 @@ public class ImageViewNextActivity extends Activity {
         textview.setText(String.format("Density: %f; DensityDpi: %d; ScaledDensity: %f; Pixel size: %d x %d",
         dm.density, dm.densityDpi, dm.scaledDensity, dm.widthPixels, dm.heightPixels));
         
-        // Disables animation, behaving like a regular ImageView,
-        // except you can still set byte[] as the source
-        // ImageViewEx.setCanAlwaysAnimate(false);
-        
-        // Sets a default density for all of the images in each ImageViewEx.
-        // ImageViewEx.setClassLevelDensity(DisplayMetrics.DENSITY_MEDIUM);
-        
-        // Sets a density for the img5 only.
-        // Changing the density after an object has been set will
-        // do nothing, you will have to re-set the object.
-        // img5.setDensity(DisplayMetrics.DENSITY_LOW);
+        // Of a loader has never been set up, create one with disk cache enabled as well
+        // This should go in your Application class, so it should be treated as a singleton,
+        // even if it's not.
+        if (loader == null) loader = new RemoteLoader(getApplicationContext(), true);
+        // Set the loader to the ImageViewNext class, so that every instance will
+        // share the same pool and cache.
+        // This should be done in your Application class, so that you won't do the repeat
+        // the same code for every instance.
+        ImageViewNext.setClassLoader(loader);
+        // Sets the loading/error drawables (can be animated drawables!!!) for every instance
+        // of the class.
+        ImageViewNext.setClassErrorDrawable(R.drawable.empty_newsthumb);
+        ImageViewNext.setClassLoadingDrawable(R.drawable.loader);
         
         img1 = (ImageViewNext)findViewById(R.id.imageViewNext1);
         img2 = (ImageViewNext)findViewById(R.id.imageViewNext2);
@@ -44,18 +49,16 @@ public class ImageViewNextActivity extends Activity {
         img4 = (ImageViewNext)findViewById(R.id.imageViewNext4);
         img5 = (ImageViewNext)findViewById(R.id.imageViewNext5);
         
-        // Create the Loader
-        RemoteLoader loader = new RemoteLoader(getApplicationContext(), true);
-        // Set the loader to the ImageViewNext
-        ImageViewNext.setClassLoader(loader);
-        
         // Sets the class density to HDPI
-        ImageViewNext.setClassLevelDensity(DisplayMetrics.DENSITY_HIGH);
+        // ImageViewNext.setClassLevelDensity(DisplayMetrics.DENSITY_HIGH);
+        // Sets the first image density to medium (bigger than the others)
+        // img1.setDensity(DisplayMetrics.DENSITY_MEDIUM);
+        
         // Sets the sources of ImageViewNexts from URL
         img1.setUrl("http://img.italiansubs.net/news2/data/Lost/Stagione%202/Lost.s02e04-05-06.gif");
-        img2.setUrl("http://img.italiansubs.net/news2/data/The%20Simpsons/Stagione%2023/the.simpsons.s23e22.gif");
+        img2.setUrl("http://img.italiansubs.net/news2/data/The%20Simpsons/Stagione%2023/the.simpsons.s23e22.gif_for_ERROR");
         img3.setUrl("http://img.italiansubs.net/news2/data/Game%20of%20Thrones/Stagione%202/Game.of.Thrones.S02E08.gif");
         img4.setUrl("http://www.italiansubs.net/forum/Smileys/default/suicidiosenzafronzoli.gif");
-        // img5.setUrl("http://img.italiansubs.net/news2/data/Lost/Stagione%202/Lost.s02e04-05-06.gif");
+        img5.setUrl("http://img.italiansubs.net/news2/data/Lost/Stagione%202/Lost.s02e04-05-06.gif");
     }
 }
