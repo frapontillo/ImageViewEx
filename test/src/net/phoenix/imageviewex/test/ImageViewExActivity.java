@@ -1,5 +1,7 @@
-package net.phoenix.imageviewex;
+package net.phoenix.imageviewex.test;
 
+import net.phoenix.imageviewex.Converters;
+import net.phoenix.imageviewex.ImageViewEx;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;

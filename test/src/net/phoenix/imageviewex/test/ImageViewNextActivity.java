@@ -1,6 +1,8 @@
-package net.phoenix.imageviewex;
+package net.phoenix.imageviewex.test;
 
 import net.phoenix.remote.RemoteLoader;
+import net.phoenix.imageviewex.ImageViewNext;
+import net.phoenix.imageviewex.test.R;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;

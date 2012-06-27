@@ -3,3 +3,5 @@
 /gen
 /src/com/github/ignition
 /libs
+/test/bin
+/test/gen
