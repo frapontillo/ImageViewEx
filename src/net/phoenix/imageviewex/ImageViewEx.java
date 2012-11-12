@@ -30,7 +30,8 @@ import java.io.InputStream;
 public class ImageViewEx extends ImageView {
 
     private static final String TAG = ImageViewEx.class.getSimpleName();
-    private static boolean canAlwaysAnimate = true;
+	
+    private static boolean mCanAlwaysAnimate = true;
     private float mScale = -1;
 
     private static final int IMAGE_SOURCE_UNKNOWN = -1;
@@ -41,15 +42,19 @@ public class ImageViewEx extends ImageView {
 
     private int mImageSource;
 
+	// Used by the fixed size optimizations
+	private boolean mIsFixedSize = false;
+	private boolean mBlockLayout = false;
+	
     private BitmapFactory.Options mOptions;
-    private int overriddenDensity = -1;
-    private static int overridenClassDensity = -1;
+    private int mOverriddenDensity = -1;
+    private static int mOverriddenClassDensity = -1;
 
-    private Movie gif;
-    private double _gifStartTime;
-    private int _frameDuration = 67;
-    private Handler handler = new Handler();
-    private Thread updater;
+    private Movie mGif;
+    private double mGifStartTime;
+    private int mFrameDuration = 67;
+    private Handler mHandler = new Handler();
+    private Thread mUpdater;
 
     ///////////////////////////////////////////////////////////
     ///                  CONSTRUCTORS                       ///
@@ -72,7 +77,7 @@ public class ImageViewEx extends ImageView {
      */
     public ImageViewEx(Context context, InputStream src) {
         super(context);
-        gif = Movie.decodeStream(src);
+        mGif = Movie.decodeStream(src);
     }
 
     /**
@@ -93,7 +98,7 @@ public class ImageViewEx extends ImageView {
      */
     public ImageViewEx(Context context, byte[] src) {
         super(context);
-        gif = Movie.decodeByteArray(src, 0, src.length);
+        mGif = Movie.decodeByteArray(src, 0, src.length);
     }
 
     /**
@@ -104,7 +109,7 @@ public class ImageViewEx extends ImageView {
      */
     public ImageViewEx(Context context, String src) {
         super(context);
-        gif = Movie.decodeFile(src);
+        mGif = Movie.decodeFile(src);
     }
     
     /**
@@ -115,7 +120,7 @@ public class ImageViewEx extends ImageView {
      * @param classLevelDensity the density to apply to every instance of {@link ImageViewEx}.
      */
     public static void setClassLevelDensity(int classLevelDensity) {
-    	overridenClassDensity = classLevelDensity;
+    	mOverriddenClassDensity = classLevelDensity;
     }
     
     /**
@@ -135,7 +140,7 @@ public class ImageViewEx extends ImageView {
      * @return true if it has been set, false otherwise.
      */
     public static boolean isClassLevelDensitySet() {
-    	return (overridenClassDensity != -1);
+    	return (mOverriddenClassDensity != -1);
     }
     
     /**
@@ -146,7 +151,7 @@ public class ImageViewEx extends ImageView {
      * @return int, the class level density
      */
     public static int getClassLevelDensity() {
-    	return overridenClassDensity;
+    	return mOverriddenClassDensity;
     }
     
     /**
@@ -156,7 +161,7 @@ public class ImageViewEx extends ImageView {
      * @return the new density the view has to use.
      */
     public void dontOverrideDensity() {
-    	overriddenDensity = -1;
+    	mOverriddenDensity = -1;
     }
     
     /**
@@ -166,7 +171,7 @@ public class ImageViewEx extends ImageView {
      * @param fixedDensity the new density the view has to use.
      */
     public void setDensity(int fixedDensity) {
-    	overriddenDensity = fixedDensity;
+    	mOverriddenDensity = fixedDensity;
     }
 
     /**
@@ -181,8 +186,8 @@ public class ImageViewEx extends ImageView {
         int density;
         
         // If a custom instance density was set, set the image to this density
-        if (overriddenDensity > 0) {
-        	density = overriddenDensity;
+        if (mOverriddenDensity > 0) {
+        	density = mOverriddenDensity;
         } else if (isClassLevelDensitySet()) {
         	// If a class level density has been set, set every image to that density
         	density = getClassLevelDensity();
@@ -204,47 +209,59 @@ public class ImageViewEx extends ImageView {
     
     /**
      * Class method.
-     * Sets the canAlwaysAnimate value. If it is true, {@link #canAnimate()} will be 
+     * Sets the mCanAlwaysAnimate value. If it is true, {@link #canAnimate()} will be 
      * triggered, determining if the animation can be played in that particular instance of
      * {@link ImageViewEx}. If it is false, {@link #canAnimate()} will never be triggered
      * and GIF animations will never start.
-     * {@link canAlwaysAnimate} defaults to true.
+     * {@link mCanAlwaysAnimate} defaults to true.
      * 
-     * @param canAlwaysAnimate 	boolean, true to always animate for every instance of
+     * @param mCanAlwaysAnimate 	boolean, true to always animate for every instance of
      * 							{@link ImageViewEx}, false if you want to perform the
      * 							decision method {@link #canAnimate()} on every
      * 							{@link #setSource(byte[])} call.
      */
-    public static void setCanAlwaysAnimate(boolean canAlwaysAnimate) {
-    	ImageViewEx.canAlwaysAnimate = canAlwaysAnimate;
+    public static void setCanAlwaysAnimate(boolean mCanAlwaysAnimate) {
+    	ImageViewEx.mCanAlwaysAnimate = mCanAlwaysAnimate;
     }
     
     /**
      * Class method.
-     * Returns the canAlwaysAnimate value. If it is true, {@link #canAnimate()} will be 
+     * Returns the mCanAlwaysAnimate value. If it is true, {@link #canAnimate()} will be 
      * triggered, determining if the animation can be played in that particular instance of
      * {@link ImageViewEx}. If it is false, {@link #canAnimate()} will never be triggered
      * and GIF animations will never start.
-     * {@link canAlwaysAnimate} defaults to true.
+     * {@link mCanAlwaysAnimate} defaults to true.
      * 
      * @return 	boolean, true to see if this instance can be animated by calling
      * 			{@link #canAnimate()}, if false, animations will never be triggered and
      * 			{@link #canAnimate()} will never be evaluated for this instance.
      */
     public static boolean getCanAlwaysAnimate() {
-    	return canAlwaysAnimate;
+    	return mCanAlwaysAnimate;
     }
-    
-    /**
-     * Internal method, deciding whether to trigger the custom decision method {@link #canAnimate()}
-     * or to use the static class value of canAlwaysAnimate.
-     * 
-     * @return true if the animation can be started, false otherwise.
-     */
-    private boolean internalCanAnimate() {
-    	if (getCanAlwaysAnimate()) return canAnimate();
-    	else return getCanAlwaysAnimate();
-    }
+	
+	/**
+	 * Sets a value indicating wether the image is considered as having a fixed size.
+	 * This will enable an optimization when assigning images to the ImageViewEx, but
+	 * has to be used sparingly or it may cause artifacts if the image isn't really
+	 * fixed in size.
+	 * <p />
+	 * An example of usage for this optimization is in ListViews, where items images
+	 * are supposed to be fixed size, and this enables buttery smoothness.
+	 * <p />
+	 * See: https://plus.google.com/u/0/113058165720861374515/posts/iTk4PjgeAWX
+	 */
+	public void setIsFixedSize(boolean fixedSize) {
+		mIsFixedSize = fixedSize;
+	}
+	
+	/**
+	 * Sets a value indicating wether the image is considered as having a fixed size.
+	 * See {@link #setIsFixedSize(boolean)} for further details.
+	 */
+	public boolean getIsFixedSize() {
+		return mIsFixedSize;
+	}
     
     /**
      * This method should be overridden with your custom implementation. By default,
@@ -333,7 +350,7 @@ public class ImageViewEx extends ImageView {
      */
     public void initializeDefaultValues() {
         if (isPlaying()) stop();
-        gif = null;
+        mGif = null;
         setTag(null);
         mImageSource = IMAGE_SOURCE_UNKNOWN;
     }
@@ -346,9 +363,9 @@ public class ImageViewEx extends ImageView {
     public void setSource(byte[] src) {
     	Movie mGif;
     	mGif = Movie.decodeByteArray(src, 0, src.length);
-        // If gif is null, it's probably not a gif
+        // If mGif is null, it's probably not a mGif
         if (mGif == null || !(internalCanAnimate())) {
-            // If not a gif and if on Android 3+, enable HW acceleration
+            // If not a mGif and if on Android 3+, enable HW acceleration
             if (Build.VERSION.SDK_INT >= 11)
                 setLayerType(View.LAYER_TYPE_HARDWARE, null);
             // Sets the image as a regular Drawable
@@ -373,7 +390,7 @@ public class ImageViewEx extends ImageView {
             
             initializeDefaultValues();
             mImageSource = IMAGE_SOURCE_GIF;
-            gif = mGif;
+            mGif = mGif;
             play();
         }
     }
@@ -391,8 +408,10 @@ public class ImageViewEx extends ImageView {
      * {@inheritDoc}
      */
     public void setImageDrawable(Drawable drawable) {
+		blockLayoutIfPossible();
         initializeDefaultValues();
         super.setImageDrawable(drawable);
+        mBlockLayout = false;
     	mImageSource = IMAGE_SOURCE_DRAWABLE;
     }
     
@@ -416,7 +435,7 @@ public class ImageViewEx extends ImageView {
             throw new IllegalArgumentException
             	("Frame duration can't be less or equal than zero.");
 
-        _frameDuration = duration;
+        mFrameDuration = duration;
     }
 
     /**
@@ -429,7 +448,7 @@ public class ImageViewEx extends ImageView {
             throw new IllegalArgumentException
             	("FPS can't be less or equal than zero.");
 
-        _frameDuration = Math.round(1000f / fps);
+        mFrameDuration = Math.round(1000f / fps);
     }
 
     ///////////////////////////////////////////////////////////
@@ -442,7 +461,7 @@ public class ImageViewEx extends ImageView {
      * @return true if animating, false otherwise.
      */
     public boolean isPlaying() {
-        return updater != null && updater.isAlive();
+        return mUpdater != null && mUpdater.isAlive();
     }
 
     /**
@@ -452,7 +471,7 @@ public class ImageViewEx extends ImageView {
      * @return true if the instance is ready for playing, false otherwise.
      */
     public boolean canPlay() {
-        return gif != null;
+        return mGif != null;
     }
 
     /**
@@ -462,7 +481,7 @@ public class ImageViewEx extends ImageView {
      * @return The duration, in milliseconds, of each frame.
      */
     public int getFramesDuration() {
-        return _frameDuration;
+        return mFrameDuration;
     }
 
     /**
@@ -471,7 +490,7 @@ public class ImageViewEx extends ImageView {
      * @return The fps amount.
      */
     public float getFPS() {
-        return 1000.0f / _frameDuration;
+        return 1000.0f / mFrameDuration;
     }
 
     ///////////////////////////////////////////////////////////
@@ -484,7 +503,7 @@ public class ImageViewEx extends ImageView {
      */
     public void play() {
         // Do something if the animation hasn't started yet
-        if (updater == null || !updater.isAlive()) {
+        if (mUpdater == null || !mUpdater.isAlive()) {
             // Check id the animation is ready
             if (!canPlay()) {
                 throw new IllegalStateException
@@ -492,16 +511,16 @@ public class ImageViewEx extends ImageView {
             }
 
             // Initialize the thread and start it
-            updater = new Thread() {
+            mUpdater = new Thread() {
 
                 @Override
                 public void run() {
 
                     // Infinite loop: invalidates the View.
                     // Stopped when the thread is stopped or interrupted.
-                    while (updater != null && !updater.isInterrupted()) {
+                    while (mUpdater != null && !mUpdater.isInterrupted()) {
 
-                        handler.post(new Runnable() {
+                        mHandler.post(new Runnable() {
                             public void run() {
                                 ImageViewEx.this.invalidate();
                             }
@@ -509,7 +528,7 @@ public class ImageViewEx extends ImageView {
 
                         // The thread sleeps until the next frame
                         try {
-                            Thread.sleep(_frameDuration);
+                            Thread.sleep(mFrameDuration);
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                         }
@@ -517,7 +536,7 @@ public class ImageViewEx extends ImageView {
                 }
             };
 
-            updater.start();
+            mUpdater.start();
         }
     }
 
@@ -526,8 +545,8 @@ public class ImageViewEx extends ImageView {
      */
     public void pause() {
         // If the animation has started
-        if (updater != null && updater.isAlive()) {
-            updater.suspend();
+        if (mUpdater != null && mUpdater.isAlive()) {
+            mUpdater.suspend();
         }
     }
 
@@ -536,9 +555,19 @@ public class ImageViewEx extends ImageView {
      */
     public void stop() {
     	// If the animation has started
-        if (updater != null && updater.isAlive() && canPlay()) {
-            updater.interrupt();
-            _gifStartTime = 0;
+        if (mUpdater != null && mUpdater.isAlive() && canPlay()) {
+            mUpdater.interrupt();
+            mGifStartTime = 0;
+        }
+    }
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+    public void requestLayout() {
+        if (!mBlockLayout) {
+            super.requestLayout();
         }
     }
 
@@ -553,23 +582,23 @@ public class ImageViewEx extends ImageView {
      */
     @Override
     protected void onDraw(Canvas canvas) {
-        if (gif != null) {
+        if (mGif != null) {
             long now = android.os.SystemClock.uptimeMillis();
             
             // first time	
-            if (_gifStartTime == 0) {
-                _gifStartTime = now;
+            if (mGifStartTime == 0) {
+                mGifStartTime = now;
             }
 
-            int dur = gif.duration();
+            int dur = mGif.duration();
             if (dur == 0) {
                 dur = 1000;
             }
-            int relTime = (int) ((now - _gifStartTime) % dur);
-            gif.setTime(relTime);
+            int relTime = (int) ((now - mGifStartTime) % dur);
+            mGif.setTime(relTime);
             canvas.save(Canvas.MATRIX_SAVE_FLAG);
             canvas.scale(mScale, mScale);
-            gif.draw(canvas, this.getWidth() - (gif.width() * mScale), this.getHeight() - (gif.height() * mScale));
+            mGif.draw(canvas, this.getWidth() - (mGif.width() * mScale), this.getHeight() - (mGif.height() * mScale));
             canvas.restore();
         } else {
             super.onDraw(canvas);
@@ -604,9 +633,9 @@ public class ImageViewEx extends ImageView {
             // We were told how big to be
             result = specSize;
         } else {
-            // Measure the gif
-            if (gif != null)
-                result = Math.round(gif.width() * mScale) + getPaddingLeft() + getPaddingRight();
+            // Measure the mGif
+            if (mGif != null)
+                result = Math.round(mGif.width() * mScale) + getPaddingLeft() + getPaddingRight();
             else        // Measure the drawable
                 result = Math.round(getDrawable().getIntrinsicWidth() * mScale) + getPaddingLeft() + getPaddingRight();
 
@@ -635,9 +664,9 @@ public class ImageViewEx extends ImageView {
             result = specSize;
         } else {
 
-            // Measure the gif
-            if (gif != null)
-                result = Math.round(gif.height() * mScale) + getPaddingTop() + getPaddingBottom();
+            // Measure the mGif
+            if (mGif != null)
+                result = Math.round(mGif.height() * mScale) + getPaddingTop() + getPaddingBottom();
             else        // Measure the drawable
                 result = Math.round(getDrawable().getIntrinsicHeight() * mScale) + getPaddingTop() + getPaddingBottom();
 
@@ -650,4 +679,25 @@ public class ImageViewEx extends ImageView {
         return result;
     }
     
+	/**
+	 * Blocks layout recalculation if the image is set as fixed size
+	 * to prevent unnecessary calculations and provide butteriness.
+	 */
+	private void blockLayoutIfPossible() {
+        if (mIsFixedSize) {
+            mBlockLayout = true;
+        }
+    }
+    
+    /**
+     * Internal method, deciding whether to trigger the custom decision method {@link #canAnimate()}
+     * or to use the static class value of mCanAlwaysAnimate.
+     * 
+     * @return true if the animation can be started, false otherwise.
+     */
+    private boolean internalCanAnimate() {
+    	if (getCanAlwaysAnimate()) return canAnimate();
+    	else return getCanAlwaysAnimate();
+    }
+	
 }
