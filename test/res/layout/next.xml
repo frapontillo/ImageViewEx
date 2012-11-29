@@ -1,43 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
 
-    <TextView
-        android:id="@+id/textview"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/hello" />
+    <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <net.phoenix.imageviewex.ImageViewNext
-        android:id="@+id/imageViewNext1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_launcher" />
+        <TextView
+                android:id="@+id/textview"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/hello"/>
 
-    <net.phoenix.imageviewex.ImageViewNext
-        android:id="@+id/imageViewNext2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_launcher" />
+        <net.phoenix.imageviewex.ImageViewNext
+                android:id="@+id/imageViewNext1"
+                android:layout_width="wrap_content"
+                android:layout_height="130dp"
+                android:background="#f00"
+                android:src="@drawable/ic_launcher"/>
 
-     <net.phoenix.imageviewex.ImageViewNext
-        android:id="@+id/imageViewNext3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_launcher" />
+        <net.phoenix.imageviewex.ImageViewNext
+                android:id="@+id/imageViewNext2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_launcher"/>
 
-    <net.phoenix.imageviewex.ImageViewNext
-        android:id="@+id/imageViewNext4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_launcher" />
+        <net.phoenix.imageviewex.ImageViewNext
+                android:id="@+id/imageViewNext3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_launcher"/>
 
-    <net.phoenix.imageviewex.ImageViewNext
-        android:id="@+id/imageViewNext5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_launcher" />
+        <net.phoenix.imageviewex.ImageViewNext
+                android:id="@+id/imageViewNext4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_launcher"/>
 
-</LinearLayout>
+        <net.phoenix.imageviewex.ImageViewNext
+                android:id="@+id/imageViewNext5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_launcher"/>
+
+    </LinearLayout>
+</ScrollView>

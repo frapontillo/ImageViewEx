@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="imageviewex">
+    <output-path>$PROJECT_DIR$/out/production/</output-path>
+    <root id="archive" name="imageviewex.jar">
+      <element id="module-output" name="ImageViewEx" />
+    </root>
+  </artifact>
+</component>

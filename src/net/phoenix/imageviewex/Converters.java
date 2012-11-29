@@ -1,9 +1,5 @@
 package net.phoenix.imageviewex;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -13,24 +9,28 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * Converters class, it's abstract and all of its methods are static.
- * 
+ *
  * @author Francesco Pontillo
  * @author Sebastiano Poggi
- *
  */
 public abstract class Converters {
-	private static final String TAG = Converters.class.getSimpleName();
+    private static final String TAG = Converters.class.getSimpleName();
 
     /**
      * Converts a byte array into a BitmapDrawable, using the provided options.
      *
-     * @param image 	The byte array representing the image.
-     * @param opts  	The decoding options to use, or null if you'd like to use predefined
-     * 					options (scaling will be not active).
-     * @param context 	The Context for getting the Resources.
-     * @return			The initialized BitmapDrawable.
+     * @param image   The byte array representing the image.
+     * @param opts    The decoding options to use, or null if you'd like to use predefined
+     *                options (scaling will be not active).
+     * @param context The Context for getting the Resources.
+     *
+     * @return The initialized BitmapDrawable.
      */
     public static BitmapDrawable byteArrayToDrawable(byte[] image, Options opts, Context context) {
         if (opts == null) {
@@ -46,10 +46,11 @@ public abstract class Converters {
     /**
      * Converts a byte array into a Bitmap, using the provided options.
      *
-     * @param image 	The byte array representing the image.
-     * @param opts  	The decoding options to use, or null if you'd like to use predefined
-     * 					options (scaling will be not active).
-     * @return			The initialized BitmapDrawable.
+     * @param image The byte array representing the image.
+     * @param opts  The decoding options to use, or null if you'd like to use predefined
+     *              options (scaling will be not active).
+     *
+     * @return The initialized BitmapDrawable.
      */
     public static Bitmap byteArrayToBitmap(byte[] image, Options opts) {
         if (opts == null) {
@@ -63,8 +64,9 @@ public abstract class Converters {
     /**
      * Covnerts a Bitmap into a byte array.
      *
-     * @param image 	The Bitmap to convert.
-     * @return 			The byte array representing the Bitmap (compressed in PNG).
+     * @param image The Bitmap to convert.
+     *
+     * @return The byte array representing the Bitmap (compressed in PNG).
      */
     public static byte[] bitmapToByteArray(Bitmap image) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -75,38 +77,55 @@ public abstract class Converters {
     /**
      * Converts a Drawable into a byte array.
      *
-     * @param image 	The Drawable to convertLa Drawable da convertire.
-     * @return			The byte array representing the Drawable (compressed in PNG).
+     * @param image The Drawable to convertLa Drawable da convertire.
+     *
+     * @return The byte array representing the Drawable (compressed in PNG).
      */
     public static byte[] drawableToByteArray(Drawable image) {
         Bitmap bitmap = ((BitmapDrawable) image).getBitmap();
         return bitmapToByteArray(bitmap);
     }
-    
+
     /**
      * Gets an asset from a provided AssetManager and its name in the directory and returns a
      * byte array representing the object content.
-     * 
-     * @param assetManager	An {@link AssetManager}.
-     * @param asset			String of the file name.
-     * @return				byte[] representing the object content.
+     *
+     * @param assetManager An {@link AssetManager}.
+     * @param asset        String of the file name.
+     *
+     * @return byte[] representing the object content.
      */
     public static byte[] assetToByteArray(AssetManager assetManager, String asset) {
-    	byte[] image = null;
-		int b;
-    	ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        byte[] image = null;
+        int b;
+        InputStream is = null;
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 
-		try {
-			InputStream is = assetManager.open(asset);
-			while ((b = is.read()) != -1) {
-				outStream.write(b);
-			}
-			image = outStream.toByteArray();
-			outStream.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-    	return image;
+        try {
+            is = assetManager.open(asset);
+            while ((b = is.read()) != -1) {
+                outStream.write(b);
+            }
+            image = outStream.toByteArray();
+        }
+        catch (IOException e) {
+            Log.v(TAG, "Error while reading asset to byte array: " + asset, e);
+            image = null;
+        }
+        finally {
+            if (is != null) {
+                try {
+                    is.close();
+                }
+                catch (IOException ignored) { }
+            }
+
+            try {
+                outStream.close();
+            }
+            catch (IOException ignored) { }
+        }
+
+        return image;
     }
 }
