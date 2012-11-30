@@ -748,22 +748,34 @@ public class ImageViewEx extends ImageView {
      * is aligned at the top of the ImageViewEx.
      */
     private float calcTopAlignYDisplacement() {
-        final Drawable tmpDrawable = getDrawable();
-        if (tmpDrawable == null || !(tmpDrawable instanceof BitmapDrawable)) {
-            return 0f;     // Nothing to do here
-        }
-
-        // Retrieve the bitmap, its height and the ImageView height
-        Bitmap bmp = ((BitmapDrawable) tmpDrawable).getBitmap();
-        int bmpHeight = bmp.getScaledHeight(mDm);
-        int viewHeight = getMeasuredHeight();
+        int viewHeight = getHeight();
+        int imgHeight = 0;
+        float displacement = 0f;
 
         if (viewHeight <= 0) {
             Log.v(TAG, "The ImageViewEx is still initializing...");
+            return displacement;
+        }
+
+        if (mGif == null) {
+            final Drawable tmpDrawable = getDrawable();
+            if ((tmpDrawable == null || !(tmpDrawable instanceof BitmapDrawable)) || mGif == null) {
+                return 0f;     // Nothing to do here
+            }
+
+            // Retrieve the bitmap, its height and the ImageView height
+            Bitmap bmp = ((BitmapDrawable) tmpDrawable).getBitmap();
+            imgHeight = bmp.getScaledHeight(mDm);
+        }
+        else {
+            // This is a GIF...
+            imgHeight = mGif.height();
         }
 
         // Top displacement [px] = (image height / 2) - (view height / 2)
-        return -1 * ((bmpHeight - viewHeight) / 2);        // This is in pixels...
+        displacement = -1 * ((imgHeight - viewHeight) / 2);        // This is in pixels...
+
+        return displacement;
     }
 
     /**
