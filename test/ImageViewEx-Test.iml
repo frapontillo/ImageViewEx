@@ -79,6 +79,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="ImageViewEx" scope="PROVIDED" />
   </component>
 </module>
 
