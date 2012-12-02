@@ -50,18 +50,10 @@
     <orderEntry type="jdk" jdkName="Android 4.0.3 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library" exported="">
-      <library name="ignition-support.jar">
+      <library name="libs">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/libs/ignition-support.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library name="guava-12.0.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/libs/guava-12.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/libs/guava-13.0.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
