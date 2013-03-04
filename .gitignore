@@ -2,7 +2,6 @@
 /gen
 /out
 /src/com/github/ignition
-/libs
 /test/bin
 /test/gen
 /.idea/workspace.xml
