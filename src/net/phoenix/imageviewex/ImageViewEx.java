@@ -135,11 +135,13 @@ public class ImageViewEx extends ImageView {
     }
 
     /**
-     * Sets the image from a byte array.
+     * Sets the image from a byte array. Should be called on a worker thread
+     * because it can be pretty CPU-consuming. Will handle itself referring
+     * back to the UI thread when needed.
      *
      * @param src The byte array containing the image to set into the ImageViewEx.
      */
-    public void setSource(byte[] src) {
+    public void setSource(final byte[] src) {
         if (src == null) {
             try {
                 stop();
@@ -151,45 +153,58 @@ public class ImageViewEx extends ImageView {
             return;
         }
 
-        Movie gif;
-        gif = Movie.decodeByteArray(src, 0, src.length);
+        final Movie gif = Movie.decodeByteArray(src, 0, src.length);
 
         // If gif is null, it's probably not a gif
-        if (gif == null || !(internalCanAnimate())) {
+        if (gif == null || !internalCanAnimate()) {
 
             // If not a gif and if on Android 3+, enable HW acceleration
-            if (Build.VERSION.SDK_INT >= 11) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
                 setLayerType(View.LAYER_TYPE_HARDWARE, null);
             }
 
             // Sets the image as a regular Drawable
             setTag(null);
 
-            Drawable d = Converters.byteArrayToDrawable(src, mOptions, getContext());
-            setImageDrawable(d);
-            measure(0, 0);
-            requestLayout();
+            final Drawable d = Converters.byteArrayToDrawable(src, mOptions, getContext());
 
-            try {
-                AnimationDrawable animationDrawable = (AnimationDrawable) this.getDrawable();
-                animationDrawable.start();
-            }
-            catch (Exception ignored) {
-            }
+            // We need to run this on the UI thread
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    setImageDrawable(d);
+                    measure(0, 0);
+                    requestLayout();
+
+                    try {
+                        AnimationDrawable animationDrawable = (AnimationDrawable) getDrawable();
+                        animationDrawable.start();
+                    }
+                    catch (Exception ignored) {
+                    }
+                }
+            });
+
         }
         else {
-            measure(0, 0);
-            requestLayout();
-
             // Disables the HW acceleration when viewing a GIF on Android 3+
             if (Build.VERSION.SDK_INT >= 11) {
                 setLayerType(View.LAYER_TYPE_SOFTWARE, null);
             }
 
-            initializeDefaultValues();
-            mImageSource = IMAGE_SOURCE_GIF;
-            mGif = gif;
-            play();
+            // We need to run this on the UI thread
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    measure(0, 0);
+                    requestLayout();
+
+                    initializeDefaultValues();
+                    mImageSource = IMAGE_SOURCE_GIF;
+                    mGif = gif;
+                    play();
+                }
+            });
         }
     }
 

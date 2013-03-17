@@ -15,12 +15,12 @@
 
 package net.phoenix.remote;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-
+import android.content.Context;
+import android.util.Log;
 import net.phoenix.cache.BytesCache;
 
-import android.content.Context;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Realizes a background loader that downloads any data from a URL, optionally backed by a
@@ -152,9 +152,11 @@ public class RemoteLoader {
      */
     public void load(String url, RemoteLoaderHandler handler) {
         if (cache != null && cache.containsKeyInMemory(url)) {
+            Log.v("RemoteLoader", "MemCache HIT for key " + url);
             // do not go through message passing, handle directly instead
             handler.success(cache.get(url));
         } else {
+            Log.v("RemoteLoader", "MemCache MISS for key " + url + " (cache==null? " + (cache == null) + ")");
             executor.execute(new RemoteLoaderJob(url, handler, cache, numRetries, defaultBufferSize));
         }
     }
