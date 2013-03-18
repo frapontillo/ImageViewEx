@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import net.frakbot.cache.CacheHelper;
 import net.frakbot.imageviewex.ImageViewNext;
+import net.frakbot.imageviewex.requestmanager.ImageViewExRequestFactory;
 import net.frakbot.remote.RemoteHelper;
 import android.content.Context;
 import android.os.Bundle;
@@ -47,30 +48,33 @@ public class ImageDownloadOperation implements Operation {
 		try {
 			image = RemoteHelper.download(url);
 		} catch (IOException e) {
-			if (url == null || url.equals("")) throw new DataException("No value for URL " + url);
+			throw new DataException("NETWORK: Error while getting value for URL " + url);
 		}
 		
-		// Save into the disk cache
-		DiskLruCache diskCache = ImageViewNext.getDiskCache();
-		try {
-			Editor editor = diskCache.edit(url);
-            if (editor != null) {
-	            if(CacheHelper.writeByteArrayToEditor(image, editor)) {               
-	            	diskCache.flush();
-	                editor.commit();
-	            } else {
-	                editor.abort();
+		// If the object is not null
+		if (image != null) {
+			// Save into the disk cache
+			DiskLruCache diskCache = ImageViewNext.getDiskCache();
+			try {
+				Editor editor = diskCache.edit(CacheHelper.UriToDiskLruCacheString(url));
+	            if (editor != null) {
+		            if(CacheHelper.writeByteArrayToEditor(image, editor)) {               
+		            	diskCache.flush();
+		                editor.commit();
+		            } else {
+		                editor.abort();
+		            }
 	            }
-            }
-		} catch (IOException e) {
-			e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			// Save into the memory cache
+			LruCache<String, byte[]> memCache = ImageViewNext.getMemCache();
+			memCache.put(url, image);
 		}
-		// Save into the memory cache
-		LruCache<String, byte[]> memCache = ImageViewNext.getMemCache();
-		memCache.put(url, image);
 		
 		Bundle b = new Bundle();
-		b.putByteArray(PARAM_IMAGE_URL, image);
+		b.putByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT, image);
 		return b;
 	}
 

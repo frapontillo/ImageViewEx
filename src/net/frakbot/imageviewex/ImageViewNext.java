@@ -42,7 +42,7 @@ public class ImageViewNext extends ImageViewEx {
 	private static LruCache<String, byte[]> mMemCache;
 	
 	private static int mAppVersion = 1;
-	private static int mDiskCacheValueCount = 100;
+	private static int mDiskCacheValueCount = 1;
     private static int mDiskCacheSize = 50 * 1024 * 1024; // 50MiB
 	private static DiskLruCache mDiskCache;
 	
@@ -108,20 +108,6 @@ public class ImageViewNext extends ImageViewEx {
 	}
 
 	/**
-	 * @return The disk cache max value count.
-	 */
-	public static int getDiskCacheValueCount() {
-		return mDiskCacheValueCount;
-	}
-
-	/**
-	 * @param mDiskCacheValueCount The disk cache max value count to set.
-	 */
-	public static void setDiskCacheValueCount(int diskCacheValueCount) {
-		ImageViewNext.mDiskCacheValueCount = diskCacheValueCount;
-	}
-
-	/**
 	 * @return The disk cache max size, in bits.
 	 */
 	public static int getDiskCacheSize() {
@@ -152,9 +138,7 @@ public class ImageViewNext extends ImageViewEx {
 			try {
 				mDiskCache = DiskLruCache.open(
 					diskCacheDir, mAppVersion, mDiskCacheValueCount, mDiskCacheSize);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			} catch (IOException e) { }
 			cacheInit = true;
     	}
     }
@@ -407,7 +391,10 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestFinished(Request request, Bundle resultData) {
     		byte[] image = 
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
-    		mImageViewNext.onMemCacheHit(image);
+    		if (image == null)
+        		handleMiss();
+    		else
+    			mImageViewNext.onMemCacheHit(image);
     	}
 
     	@Override
@@ -452,7 +439,10 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestFinished(Request request, Bundle resultData) {
     		byte[] image = 
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
-    		mImageViewNext.onDiskCacheHit(image);
+    		if (image == null)
+        		handleMiss();
+    		else
+    			mImageViewNext.onDiskCacheHit(image);
     	}
 
     	@Override
@@ -497,7 +487,10 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestFinished(Request request, Bundle resultData) {
     		byte[] image = 
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
-    		mImageViewNext.onNetworkHit(image);
+    		if (image == null)
+        		handleMiss();
+    		else
+    			mImageViewNext.onNetworkHit(image);
     	}
 
     	@Override

@@ -1,6 +1,7 @@
 package net.frakbot.imageviewex.operation;
 
 import net.frakbot.imageviewex.ImageViewNext;
+import net.frakbot.imageviewex.requestmanager.ImageViewExRequestFactory;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.util.LruCache;
@@ -31,7 +32,7 @@ public class ImageMemCacheOperation implements Operation {
 			throws ConnectionException, DataException, CustomRequestException {
 		// Get the URL from the input Bundle
 		String url = request.getString(PARAM_IMAGE_URL);
-		if (url == null || url.equals("")) throw new DataException("No value for URL " + url);
+		if (url == null || url.equals("")) throw new DataException("MEM CACHE: Empty URL " + url);
 		
 		// Initializes the caches, if they're not initialized already
 		ImageViewNext.initCaches(context);
@@ -39,10 +40,8 @@ public class ImageMemCacheOperation implements Operation {
 		LruCache<String, byte[]> cache = ImageViewNext.getMemCache();
 		byte[] image = cache.get(url);
 		
-		if (image == null) throw new DataException("No value for URL " + url);
-		
 		Bundle b = new Bundle();
-		b.putByteArray(PARAM_IMAGE_URL, image);
+		b.putByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT, image);
 		return b;
 	}
 

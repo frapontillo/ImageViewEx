@@ -18,8 +18,7 @@
         android:hardwareAccelerated="true" >
         
         <service
-            android:name="net.frakbot.imageviewex.service.ImageViewExService"
-            android:exported="false" />
+            android:name="net.frakbot.imageviewex.service.ImageViewExService"/>
     </application>
 
 </manifest>

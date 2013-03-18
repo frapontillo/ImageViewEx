@@ -1,9 +1,9 @@
 package net.frakbot.imageviewex.operation;
 
-import java.io.IOException;
-
+import net.frakbot.cache.CacheHelper;
 import net.frakbot.imageviewex.Converters;
 import net.frakbot.imageviewex.ImageViewNext;
+import net.frakbot.imageviewex.requestmanager.ImageViewExRequestFactory;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.util.LruCache;
@@ -44,25 +44,29 @@ public class ImageDiskCacheOperation implements Operation {
 		
 		// Get the entry
 		DiskLruCache diskCache = ImageViewNext.getDiskCache();
-		Snapshot cacheEntry;
+		Snapshot cacheEntry = null;
 		try {
-			cacheEntry = diskCache.get(PARAM_IMAGE_URL);
-		} catch (IOException e) {
-			throw new DataException("No value for URL " + url);
+			cacheEntry = diskCache.get(CacheHelper.UriToDiskLruCacheString(url));
+		} catch (Exception e) {
+			throw new DataException("DISK CACHE: Error while getting value for URL " + url);
 		}
-		if (cacheEntry == null) throw new DataException("No value for URL " + url);
 		
-		// Convert the InputStream
-		byte[] image = Converters.inputStreamToByteArray(
-				cacheEntry.getInputStream(0),
-				(int)cacheEntry.getLength(0));
+		byte[] image = null;
 		
-		// Saves the image in the in-memory cache
-		LruCache<String, byte[]> memCache = ImageViewNext.getMemCache();
-		memCache.put(url, image);
+		// If the object is not null, convert it
+		if (cacheEntry != null) {
+			// Convert the InputStream
+			image = Converters.inputStreamToByteArray(
+					cacheEntry.getInputStream(0),
+					(int)cacheEntry.getLength(0));
+			
+			// Saves the image in the in-memory cache
+			LruCache<String, byte[]> memCache = ImageViewNext.getMemCache();
+			memCache.put(url, image);
+		}
 		
 		Bundle b = new Bundle();
-		b.putByteArray(PARAM_IMAGE_URL, image);
+		b.putByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT, image);
 		return b;
 	}
 
