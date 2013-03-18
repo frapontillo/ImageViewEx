@@ -1,4 +1,4 @@
-package net.phoenix.imageviewex;
+package net.frakbot.imageviewex;
 
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -16,8 +16,7 @@ import java.io.InputStream;
 /**
  * Converters class, it's abstract and all of its methods are static.
  *
- * @author Francesco Pontillo
- * @author Sebastiano Poggi
+ * @author Francesco Pontillo, Sebastiano Poggi
  */
 public abstract class Converters {
     private static final String TAG = Converters.class.getSimpleName();
@@ -127,5 +126,30 @@ public abstract class Converters {
         }
 
         return image;
+    }
+    
+    /**
+     * Converts an {@link InputStream} into a byte array.
+     * 
+     * @param is	The {@link InputStream} to convert.
+     * @param size	The size of the {@link InputStream}.
+     * 
+     * @return		The converted byte array.
+     */
+    public static byte[] inputStreamToByteArray(InputStream is, int size) {
+    	ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+    	byte[] buffer = new byte[size];
+
+		int len = 0;
+		try {
+			while ((len = is.read(buffer)) != -1) {
+				byteBuffer.write(buffer, 0, len);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		buffer = byteBuffer.toByteArray();
+		return buffer;
     }
 }

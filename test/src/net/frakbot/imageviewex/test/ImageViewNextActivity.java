@@ -1,17 +1,13 @@
-package net.phoenix.imageviewex.test;
+package net.frakbot.imageviewex.test;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.widget.TextView;
-import net.phoenix.imageviewex.ImageAlign;
-import net.phoenix.imageviewex.ImageViewNext;
-import net.phoenix.remote.RemoteLoader;
+import net.frakbot.imageviewex.ImageAlign;
+import net.frakbot.imageviewex.ImageViewNext;
 
-public class ImageViewNextActivity extends Activity {
-    // Create the Loader
-    private static RemoteLoader loader = null;
-    
+public class ImageViewNextActivity extends Activity {    
     private ImageViewNext img1;
 	private ImageViewNext img2;
 	private ImageViewNext img3;
@@ -30,16 +26,7 @@ public class ImageViewNextActivity extends Activity {
         TextView textview = (TextView)findViewById(R.id.textview);
         textview.setText(String.format("Density: %f; DensityDpi: %d; ScaledDensity: %f; Pixel size: %d x %d",
         dm.density, dm.densityDpi, dm.scaledDensity, dm.widthPixels, dm.heightPixels));
-        
-        // Of a loader has never been set up, create one with disk cache enabled as well
-        // This should go in your Application class, so it should be treated as a singleton,
-        // even if it's not.
-        if (loader == null) loader = new RemoteLoader(getApplicationContext(), true);
-        // Set the loader to the ImageViewNext class, so that every instance will
-        // share the same pool and cache.
-        // This should be done in your Application class, so that you won't do the repeat
-        // the same code for every instance.
-        ImageViewNext.setClassLoader(loader);
+
         // Sets the loading/error drawables (can be animated drawables!!!) for every instance
         // of the class.
         ImageViewNext.setClassErrorDrawable(R.drawable.empty_newsthumb);

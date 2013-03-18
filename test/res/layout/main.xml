@@ -14,32 +14,32 @@
                 android:layout_height="wrap_content"
                 android:text="@string/hello"/>
 
-        <net.phoenix.imageviewex.ImageViewEx
+        <net.frakbot.imageviewex.ImageViewEx
                 android:id="@+id/imageViewEx1"
                 android:layout_width="wrap_content"
                 android:layout_height="130dp"
                 android:background="#0f0"
                 android:src="@drawable/ic_launcher"/>
 
-        <net.phoenix.imageviewex.ImageViewEx
+        <net.frakbot.imageviewex.ImageViewEx
                 android:id="@+id/imageViewEx2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_launcher"/>
 
-        <net.phoenix.imageviewex.ImageViewEx
+        <net.frakbot.imageviewex.ImageViewEx
                 android:id="@+id/imageViewEx3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_launcher"/>
 
-        <net.phoenix.imageviewex.ImageViewEx
+        <net.frakbot.imageviewex.ImageViewEx
                 android:id="@+id/imageViewEx4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_launcher"/>
 
-        <net.phoenix.imageviewex.ImageViewEx
+        <net.frakbot.imageviewex.ImageViewEx
                 android:id="@+id/imageViewEx5"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

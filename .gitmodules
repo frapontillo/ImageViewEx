@@ -1,0 +1,6 @@
+[submodule "submods/DataDroid"]
+	path = submods/DataDroid
+	url = git://github.com/foxykeep/DataDroid.git
+[submodule "submods/DiskLruCache"]
+	path = submods/DiskLruCache
+	url = git://github.com/JakeWharton/DiskLruCache.git

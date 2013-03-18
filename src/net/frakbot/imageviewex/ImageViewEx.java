@@ -1,5 +1,6 @@
-package net.phoenix.imageviewex;
+package net.frakbot.imageviewex;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -25,8 +26,7 @@ import java.io.InputStream;
  * Extension of the ImageView that handles any kind of image already supported
  * by ImageView, plus animated GIF images.
  *
- * @author Sebastiano Poggi
- * @author Francesco Pontillo
+ * @author Sebastiano Poggi, Francesco Pontillo
  */
 public class ImageViewEx extends ImageView {
 
@@ -40,8 +40,9 @@ public class ImageViewEx extends ImageView {
     private static final int IMAGE_SOURCE_DRAWABLE = 1;
     private static final int IMAGE_SOURCE_BITMAP = 2;
     private static final int IMAGE_SOURCE_GIF = 2;
-
-    private int mImageSource;       // TODO: use or remove this field
+    
+    @SuppressWarnings("unused")
+	private int mImageSource;       // TODO: use or remove this field
 
     // Used by the fixed size optimizations
     private boolean mIsFixedSize = false;
@@ -134,14 +135,36 @@ public class ImageViewEx extends ImageView {
         mImageSource = IMAGE_SOURCE_UNKNOWN;
     }
 
+
     /**
-     * Sets the image from a byte array. Should be called on a worker thread
-     * because it can be pretty CPU-consuming. Will handle itself referring
-     * back to the UI thread when needed.
+     * Sets the image from a byte array. The actual image-setting is
+     * called on a worker thread because it can be pretty CPU-consuming.
      *
      * @param src The byte array containing the image to set into the ImageViewEx.
      */
     public void setSource(final byte[] src) {
+    	if (src != null) {
+			final ImageViewEx thisImageView = this;
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    thisImageView.setSourceBlocking(src);
+                }
+            });
+            t.setPriority(Thread.MIN_PRIORITY);
+            t.setName("ImageSetter@" + this.hashCode());
+            t.run();
+        }
+    }
+
+    /**
+     * Sets the image from a byte array in a blocking, CPU-consuming way.
+     * Will handle itself referring back to the UI thread when needed.
+     *
+     * @param src The byte array containing the image to set into the ImageViewEx.
+     */
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	public void setSourceBlocking(final byte[] src) {
         if (src == null) {
             try {
                 stop();
@@ -838,7 +861,8 @@ public class ImageViewEx extends ImageView {
             super.writeToParcel(out, flags);
         }
 
-        public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>() {
+        @SuppressWarnings("unused")
+		public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>() {
             public SavedState createFromParcel(Parcel in) {
                 return new SavedState(in);
             }

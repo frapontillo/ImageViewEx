@@ -1,7 +1,7 @@
-package net.phoenix.imageviewex.test;
+package net.frakbot.imageviewex.test;
 
-import net.phoenix.imageviewex.Converters;
-import net.phoenix.imageviewex.ImageViewEx;
+import net.frakbot.imageviewex.Converters;
+import net.frakbot.imageviewex.ImageViewEx;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;

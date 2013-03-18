@@ -1,4 +1,4 @@
-package net.phoenix.imageviewex;
+package net.frakbot.imageviewex;
 
 /**
  * Enum that contains image alignments for ImageViewEx.
