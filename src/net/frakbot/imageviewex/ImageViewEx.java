@@ -42,7 +42,7 @@ public class ImageViewEx extends ImageView {
     private static final int IMAGE_SOURCE_GIF = 2;
     
     @SuppressWarnings("unused")
-	private int mImageSource;       // TODO: use or remove this field
+	private int mImageSource;
 
     // Used by the fixed size optimizations
     private boolean mIsFixedSize = false;
