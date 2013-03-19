@@ -3,6 +3,8 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="" />
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/submods/DataDroid" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/submods/DiskLruCache" vcs="Git" />
   </component>
 </project>
 

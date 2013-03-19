@@ -40,9 +40,9 @@ public class ImageViewEx extends ImageView {
     private static final int IMAGE_SOURCE_DRAWABLE = 1;
     private static final int IMAGE_SOURCE_BITMAP = 2;
     private static final int IMAGE_SOURCE_GIF = 2;
-    
+
     @SuppressWarnings("unused")
-	private int mImageSource;
+    private int mImageSource;
 
     // Used by the fixed size optimizations
     private boolean mIsFixedSize = false;
@@ -143,8 +143,8 @@ public class ImageViewEx extends ImageView {
      * @param src The byte array containing the image to set into the ImageViewEx.
      */
     public void setSource(final byte[] src) {
-    	if (src != null) {
-			final ImageViewEx thisImageView = this;
+        if (src != null) {
+            final ImageViewEx thisImageView = this;
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -163,8 +163,8 @@ public class ImageViewEx extends ImageView {
      *
      * @param src The byte array containing the image to set into the ImageViewEx.
      */
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public void setSourceBlocking(final byte[] src) {
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void setSourceBlocking(final byte[] src) {
         if (src == null) {
             try {
                 stop();
@@ -810,9 +810,13 @@ public class ImageViewEx extends ImageView {
             imgHeight = mGif.height();
         }
 
-        // Top displacement [px] = (image height / 2) - (view height / 2)
-        displacement = -1 * ((imgHeight - viewHeight) / 2);        // This is in pixels...
-
+        if (viewHeight > imgHeight) {
+            displacement = -1 * (viewHeight - imgHeight);   // Just align to top edge
+        }
+        else {
+            // Top displacement [px] = (image height / 2) - (view height / 2)
+            displacement = -1 * ((imgHeight - viewHeight) / 2);        // This is in pixels...
+        }
         return displacement;
     }
 
@@ -862,7 +866,7 @@ public class ImageViewEx extends ImageView {
         }
 
         @SuppressWarnings("unused")
-		public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>() {
+        public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>() {
             public SavedState createFromParcel(Parcel in) {
                 return new SavedState(in);
             }

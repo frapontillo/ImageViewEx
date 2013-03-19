@@ -27,11 +27,12 @@
         <option name="APK_PATH" value="" />
         <option name="LIBRARY_PROJECT" value="false" />
         <option name="RUN_PROCESS_RESOURCES_MAVEN_TASK" value="true" />
-        <option name="GENERATE_UNSIGNED_APK" value="false" />
         <option name="CUSTOM_DEBUG_KEYSTORE_PATH" value="" />
         <option name="PACK_TEST_CODE" value="false" />
         <option name="RUN_PROGUARD" value="false" />
         <option name="PROGUARD_CFG_PATH" value="/proguard-project.txt" />
+        <option name="USE_CUSTOM_MANIFEST_PACKAGE" value="false" />
+        <option name="CUSTOM_MANIFEST_PACKAGE" value="" />
         <resOverlayFolders>
           <path>/res-overlay</path>
         </resOverlayFolders>
@@ -50,36 +51,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library name="imageviewex.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/libs/imageviewex.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="file://$MODULE_DIR$/../src" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="guava-12.0.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/libs/guava-12.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="ignition-support.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/libs/ignition-support.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module" module-name="ImageViewEx" scope="PROVIDED" />
+    <orderEntry type="module" module-name="ImageViewEx" />
   </component>
 </module>
 

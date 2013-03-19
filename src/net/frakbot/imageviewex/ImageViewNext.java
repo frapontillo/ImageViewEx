@@ -1,22 +1,21 @@
 package net.frakbot.imageviewex;
 
-import java.io.File;
-import java.io.IOException;
-
-import com.foxykeep.datadroid.requestmanager.Request;
-import com.foxykeep.datadroid.requestmanager.RequestManager.RequestListener;
-import com.jakewharton.DiskLruCache;
-
-import net.frakbot.cache.CacheHelper;
-import net.frakbot.imageviewex.listener.ImageViewExRequestListener;
-import net.frakbot.imageviewex.requestmanager.ImageViewExRequestFactory;
-import net.frakbot.imageviewex.requestmanager.ImageViewExRequestManager;
 import android.content.Context;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.util.LruCache;
 import android.util.AttributeSet;
+import com.foxykeep.datadroid.requestmanager.Request;
+import com.foxykeep.datadroid.requestmanager.RequestManager.RequestListener;
+import com.jakewharton.DiskLruCache;
+import net.frakbot.cache.CacheHelper;
+import net.frakbot.imageviewex.listener.ImageViewExRequestListener;
+import net.frakbot.imageviewex.requestmanager.ImageViewExRequestFactory;
+import net.frakbot.imageviewex.requestmanager.ImageViewExRequestManager;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Extension of the ImageViewEx that handles the download and caching of
@@ -87,7 +86,7 @@ public class ImageViewNext extends ImageViewEx {
 	}
 
 	/**
-	 * @param mMemCacheSize The in-memory cache size to set, in bits.
+	 * @param memCacheSize The in-memory cache size to set, in bits.
 	 */
 	public static void setMemCacheSize(int memCacheSize) {
 		ImageViewNext.mMemCacheSize = memCacheSize;
@@ -101,7 +100,7 @@ public class ImageViewNext extends ImageViewEx {
 	}
 
 	/**
-	 * @param mAppVersion The app version to set.
+	 * @param appVersion The app version to set.
 	 */
 	public static void setAppVersion(int appVersion) {
 		ImageViewNext.mAppVersion = appVersion;
@@ -115,7 +114,7 @@ public class ImageViewNext extends ImageViewEx {
 	}
 
 	/**
-	 * @param mDiskCacheSize The disk cache max size to set, in bits.
+	 * @param diskCacheSize The disk cache max size to set, in bits.
 	 */
 	public static void setDiskCacheSize(int diskCacheSize) {
 		ImageViewNext.mDiskCacheSize = diskCacheSize;
@@ -219,7 +218,6 @@ public class ImageViewNext extends ImageViewEx {
     	}
     	// Start the whole retrieval chain
     	getFromMemCache(url);
-        return;
     }
     
     /**
@@ -242,7 +240,6 @@ public class ImageViewNext extends ImageViewEx {
 				ImageViewExRequestFactory.getImageMemCacheRequest(url);
 		mCurrentRequestListener = new ImageMemCacheListener(this);
 		mRequestManager.execute(mRequest, mCurrentRequestListener);
-		return;
     }
 
     /**
@@ -254,7 +251,6 @@ public class ImageViewNext extends ImageViewEx {
 				ImageViewExRequestFactory.getImageDiskCacheRequest(url);
 		mCurrentRequestListener = new ImageDiskCacheListener(this);
 		mRequestManager.execute(mRequest, mCurrentRequestListener);
-		return;
     }
 
     /**
@@ -266,7 +262,6 @@ public class ImageViewNext extends ImageViewEx {
 				ImageViewExRequestFactory.getImageDownloaderRequest(url);
 		mCurrentRequestListener = new ImageDownloadListener(this);
 		mRequestManager.execute(mRequest, mCurrentRequestListener);
-		return;
     }
     
     /**
