@@ -176,7 +176,13 @@ public class ImageViewEx extends ImageView {
             return;
         }
 
-        final Movie gif = Movie.decodeByteArray(src, 0, src.length);
+        Movie gif = null;
+        
+        // If the animation is not requested
+        // decoding into a Movie is pointless (read: expensive)
+        if (internalCanAnimate()) {
+        	gif = Movie.decodeByteArray(src, 0, src.length);
+        }
 
         // If gif is null, it's probably not a gif
         if (gif == null || !internalCanAnimate()) {
@@ -216,19 +222,33 @@ public class ImageViewEx extends ImageView {
             }
 
             // We need to run this on the UI thread
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    measure(0, 0);
-                    requestLayout();
-
-                    initializeDefaultValues();
-                    mImageSource = IMAGE_SOURCE_GIF;
-                    mGif = gif;
-                    play();
-                }
-            });
+            mHandler.post(new MovieRunnable(gif));
         }
+    }
+    
+    /**
+     * Runnable that sets the animated gif.
+     * @author Francesco Pontillo, Sebastiano Poggi
+     */
+    private class MovieRunnable implements Runnable {
+    	
+    	private Movie gif;
+    	
+    	public MovieRunnable(Movie gif) {
+    		this.gif = gif;
+    	}
+    	
+		@Override
+		public void run() {
+			measure(0, 0);
+			requestLayout();
+			
+			initializeDefaultValues();
+			mImageSource = IMAGE_SOURCE_GIF;
+			mGif = gif;
+			play();
+		}
+    	
     }
 
     /** {@inheritDoc} */
