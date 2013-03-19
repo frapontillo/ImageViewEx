@@ -16,12 +16,12 @@ The Android Framework `Drawable` class, in fact, only supports static GIFs. This
 The `ImageViewEx` also allows you to specify what has to be considered the default image density when loading images from raw data. Android defaults to considering `mdpi` as the baseline, but using `setInDensity` you can choose to change it to whatever value you like (we suggest to stick to standard abstracted density buckets like `hdpi` thou).
 
 ##Import and usage
-This library requires Android **API level 8** (Android 2.2) as minimum, and targets the Android **API level 15**.
+This library requires Android **API level 8** (Android 2.2) as minimum, and targets the Android **API level 17**.
 
-In your project you need to include:
+Starting from version 2.0.0, you need to include in your destination project:
 
- * [ignition-support](https://github.com/kaeppler/ignition) library, a nice collection of caching and downloading helpers ImageViewEx (and ImageViewNext) are based on top of
- * [guava](http://code.google.com/p/guava-libraries/) library, required by ignition-support's cache
+ * [JakeWharton/DiskLruCache](https://github.com/JakeWharton/DiskLruCache) library, used for caching on disk.
+ * [foxykeep/DataDroid](https://github.com/foxykeep/DataDroid) library, used for handling async operations.
  
 The Eclipse project included specifies this is a library project, although it provides two basic Activities for testing the extended `ImageView`s provided.
 
@@ -32,12 +32,7 @@ For your application, you need to include the permissions specified in the Andro
  * `android.permission.WRITE_EXTERNAL_STORAGE` for making the cache access and write the SD card
  
 ##Documentation
-This is a brief documentation of the classes, methods and views included in this library
-
-###BytesCache
-`**BytesCache**` is an extension of ignition's `AbstractCache` and is basically a cache useful for storing any `byte[]` (byte array) and accessing them by a `String` key.
-
-It does nothing more than overriding some methods from `AbstractCache` so that any value is stored as a `byte[]`. Please, refer to ignition's documentation for futher instructions on how to use this simple caching system.
+This is a brief documentation of the classes, methods and views included in this library.
 
 ###ImageViewEx
 `ImageViewEx` is an extended `ImageView` that supports some additional methods for your every-day life.
@@ -108,7 +103,7 @@ You can even set a density for just one of your `ImageViewEx`s:
 	// Sets a default density for all of the images in each ImageViewEx.
 	ImageViewEx.setClassLevelDensity(DisplayMetrics.DENSITY_MEDIUM);
 	
-	// Sets a density for the img5 only.
+	// Sets a density for the img1 only.
 	// Changing the density after an object has been set will
 	// do nothing, you will have to re-set the object.
 	img1.setInDensity(DisplayMetrics.DENSITY_LOW);
@@ -117,14 +112,15 @@ You can even set a density for just one of your `ImageViewEx`s:
     img2.setSource(Converters.assetToByteArray(getAssets(), "animated_image.gif"));
 ```
 
-###RemoteLoader
-The `RemoteLoader` class, together with `RemoteLoaderJob` and `RemoteLoaderHandler` **provides a simple yet extensible system to handle data download and caching**, by using the ignition-support library and the `BytesCache` provided with this library.
-It is an abstraction of the RemoteImageLoader provided in the ignition-support library, edited in such a way that it can handle any kind of file.
+###ImageViewExService
+The `ImageViewExService` service is internally used by `ImageViewNext` for handling asynchronous operation. You need to declare this service in your `AndroidManifest.xml`:
 
-It realizes a **background loader that downloads any data from a URL, optionally backed by a two-level FIFO cache**. A thread from a thread pool will be used to download the data in the background and call the appropriate callbacks of a handler.
+```xml
+	<service android:name="net.frakbot.imageviewex.service.ImageViewExService"/>
+```
 
-###ImageViewNext
-`RemoteLoader` is used by `ImageViewNext`, an extension of `ImageViewEx` that handles **downloading, displaying and caching of images (and animated GIFs, of course)**.
+###ImageViewExService
+`ImageViewExService` is used by `ImageViewNext`, an extension of `ImageViewEx` that handles **downloading, displaying and caching of images (and animated GIFs, of course)**.
 
 `ImageViewNext` extends `ImageViewEx`, thus supporting all of its methods, plus some more.
 
@@ -137,50 +133,45 @@ It realizes a **background loader that downloads any data from a URL, optionally
  * `void setErrorDrawable(Drawable errorDrawable)` sets a `Drawable` for the current instance of of `ImageViewNext` from the resources to be displayed (and animated, if it's an `AnimatedDrawable`) as soon as the RemoteLoader returns an error, not being able to retrieve the image.
  * `Drawable getLoadingDrawable()` returns the `Drawable` to be displayed while waiting for long-running operations.
  * `Drawable getErrorDrawable()` returns the `Drawable` to be displayed in case of an error.
- * `static void setClassLoader(RemoteLoader classLoader)` sets a class `RemoteLoader` to be used for every request to the caching / networking system.
 
 ####Remote loading and caching of images
-`ImageViewNext` uses `RemoteLoader` and its handler, `RemoteLoaderHandler` to retrieve images from a cache and the internet and set them to your `ImageViewNext`.
-
- * `void setLoader(RemoteLoader loader)` sets an instance-level `RemoteLoader` to be used for every request to the caching / networking system for the current `ImageViewNext`.
- * `RemoteLoader getLoader()` returns the `RemoteLoader` to be used for the current instance of `ImageViewNext`.
- * `boolean isLoaderSet()` is `true` if a `RemoteLoader` is set.
+`ImageViewNext` uses `ImageViewExService` and some DataDroid `Operation`s to retrieve images from a two-level cache and the internet and set them into your `ImageViewNext`.
  
-Ideally, you should instantiate a `RemoteLoader` for your application, and set it to `ImageViewNext`, so it will be used for every request you make.
+`ImageViewNext` takes care of instantiating the cache to some default values, which can be overridden/read by using the following `static` methods (pretty self-explanatory, read the JavaDoc for more information about them):
+
+ * `getMemCache()`
+ * `getDiskCache()`
+ * `getMemCacheSize()`
+ * `setMemCacheSize(int memCacheSize)`
+ * `getAppVersion()`
+ * `setAppVersion(int appVersion)`
+ * `getDiskCacheSize()`
+ * `setDiskCacheSize(int diskCacheSize)`
 
 ####Getting images from the Internet
-In order to get images from the Internet, simply set a `RemoteLoader` and then call `setUrl(String url)` to start retrieving an image from the internet.
+In order to get images from the Internet, simply call `setUrl(String url)` to start retrieving an image from the internet or the caches.
 
-This method returns a `RemoteLoaderHandler`, which provides some useful methods you can override to handle the states of the image retrieval:
+`ImageViewNext` can be overridden in order to do some custom operations in the following methods:
 
- * `void before()` is called before doing anything
- * `void onMemoryHit(byte[] object)` is called as soon as there's a memory hit for the requested URL
- * `void onMemoryMiss()` is called as soon as there's a memory miss for the requested URL
- * `void onDiskHit(byte[] object)` is called as soon as there's a disk hit for the requested URL
- * `void onDiskMiss()` is called as soon as there's a disk miss for the requested URL
- * `void onNetHit(byte[] object)` is called as soon as there's a network hit for the requested URL
- * `void onNetMiss()` is called as soon as there's a network miss for the requested URL
- * `void success(byte[] object)` is automatically called by all of the `onHit`-kind-of methods
- * `void error(Exception e)` is called when an error occurs or the resource can't be found anywhere
- * `void after(byte[] object)` is automatically called after everything is done (good or bad)
+ * `void onMemCacheHit(byte[] image)` is called as soon as there's a memory cache hit for the requested URL
+ * `void onMemCacheMiss()` is called as soon as there's a memory cache miss for the requested URL
+ * `void onDiskCacheHit(byte[] image)` is called as soon as there's a disk cache hit for the requested URL
+ * `void onDiskCacheMiss()` is called as soon as there's a disk cache miss for the requested URL
+ * `void onNetworkHit(byte[] image)` is called as soon as there's a network hit for the requested URL
+ * `void onNetworkMiss()` is called as soon as there's a network miss for the requested URL
+ * `void onMiss()` is called when an error occurs or the resource can't be found anywhere
+ * `void onSuccess(byte[] image)` is automatically called after the image has been retrieved
 
-You should not worry about setting images, as this is handled by an extension of `RemoteLoaderHandler` (`RemoteLoaderHandlerNext`), which by defaults sets the loading image when there's a memory miss (on `onMemoryMiss()`), an error one in case of error (`error(Exception e)`) and the retrieved image in case of success (`success(byte[] object)`).
+You should not worry about setting images, as this is handled by `ImageViewNext` itself , which by defaults sets the loading image when there's a memory miss (on `onMemCacheMiss()`), an error one in case of error (`onMiss()`) and the retrieved image in case of success (`onSuccess(byte[] image)`).
 
-You can still make your own class extend `RemoteLoaderHandler` and handle the several exposed states as you like.
+If you override `ImageViewNext`, always call the default implementation of these methods.
 
 ####Example of use
 
 ```java
-	// In your Application class
-	private static RemoteLoader loader = new RemoteLoader(getApplicationContext(), true);
-	// Sets the class loader
-	ImageViewNext.setClassLoader(loader);
 	// Sets class-level loading/error Drawables
 	ImageViewNext.setClassErrorDrawable(R.drawable.error_thumb);
     ImageViewNext.setClassLoadingDrawable(R.drawable.loading_spinner);
-	
-	// In some Activity
-	if (loader == null) loader = new RemoteLoader(getApplicationContext(), true);
 	
 	img1.setUrl("http://upload.wikimedia.org/wikipedia/commons/9/91/Cittadimatera1.jpg");
     img2.setUrl("http://upload.wikimedia.org/wikipedia/commons/4/49/Basilicata_Matera1_tango7174.jpg");
@@ -188,7 +179,7 @@ You can still make your own class extend `RemoteLoaderHandler` and handle the se
 
 ###Known issues and workarounds
 
-It internally uses an old Android Framework class, `Movie`, to parse animated GIFs. This ensures fast execution, since the `Movie` class internally relies on native code. Due to `Movie` being a legacy class, though, there are a few quirks.
+`ImageViewEx`internally uses an old Android Framework class, `Movie`, to parse animated GIFs. This ensures fast execution, since the `Movie` class internally relies on native code. Due to `Movie` being a legacy class, though, there are a few quirks.
 
 Firstly, you can't have `Movie` working on an hardware-accelerated canvas in Honeycomb and newer versions of Android. The `ImageViewEx` thus automatically disables hardware acceleration on itself when it has to display a GIF image. One side effect is that hardware acceleration is "lost" forever on the View once turned off, so if you reuse the `ImageViewEx` and at some point you assign a GIF image to it, from that point onwards it won't be hardware accelerated anymore. That's a limitation Android itself imposes, so there's not much we can do about that. On the bright side, this only affects cases where hardware acceleration is available; even when software rendering is active, there's not a big performance hit thou.
 
@@ -199,10 +190,23 @@ If you like this project and want to make a contribution, feel free to make a pu
 
 If you use this library, letting us know would make us proud. We do not ask for anything else.
 
+## Version history
+
+### 2.0.0-alpha
+ * Caching/async system completelly rewrited.
+ * Several performance optimization.
+ * Few bugs fixed.
+
+### 1.1.0
+ * Few bugs fixed.
+
+### 1.0.0
+ * First release.
+
 ## License
 Released under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
 
-Copyright (c) 2011-2 Francesco Pontillo and Sebastiano Poggi
+Copyright (c) 2011-2013 Francesco Pontillo and Sebastiano Poggi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
