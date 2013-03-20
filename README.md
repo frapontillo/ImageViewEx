@@ -119,7 +119,7 @@ The `ImageViewExService` service is internally used by `ImageViewNext` for handl
 	<service android:name="net.frakbot.imageviewex.service.ImageViewExService"/>
 ```
 
-###ImageViewExService
+###ImageViewNext
 `ImageViewExService` is used by `ImageViewNext`, an extension of `ImageViewEx` that handles **downloading, displaying and caching of images (and animated GIFs, of course)**.
 
 `ImageViewNext` extends `ImageViewEx`, thus supporting all of its methods, plus some more.
@@ -191,6 +191,10 @@ If you like this project and want to make a contribution, feel free to make a pu
 If you use this library, letting us know would make us proud. We do not ask for anything else.
 
 ## Version history
+
+### 2.0.1-alpha
+ * Speed improvements.
+ * Moved assets to the test project.
 
 ### 2.0.0-alpha
  * Caching/async system completelly rewrited.
