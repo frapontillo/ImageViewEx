@@ -2,14 +2,10 @@ package net.frakbot.imageviewex;
 
 /**
  * Enum that contains image alignments for ImageViewEx.
- * <p/>
- * Author: Sebastiano Poggi
- * Created on: 29/11/12 Time: 17.21
- * File version: 1.0
- * <p/>
- * Changelog:
- * Version 1.0
- * * Initial revision
+ * 
+ * @author Sebastiano Poggi, Francesco Pontillo
+ *
+ * @deprecated Use ScaleType.FIT_START and ScaleType.FIT_END instead.
  */
 public enum ImageAlign {
     /**
@@ -19,8 +15,8 @@ public enum ImageAlign {
     NONE,
 
     /**
-     * Force top alignment: the image is fitted on the View
-     * width and its top edge is aligned with the View top.
+     * Force top alignment: the top edge is aligned with
+     * the View top.
      */
     TOP
 }

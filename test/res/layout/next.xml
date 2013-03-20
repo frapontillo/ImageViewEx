@@ -16,35 +16,43 @@
 
         <net.frakbot.imageviewex.ImageViewNext
                 android:id="@+id/imageViewNext1"
-                android:layout_height="400dp"
-                android:layout_width="400dp"
+                android:layout_height="100dp"
+                android:layout_width="100dp"
                 android:background="#f00"
                 android:src="@drawable/ic_launcher"
-                android:scaleType="centerInside" />
+                android:scaleType="fitStart" />
 
         <net.frakbot.imageviewex.ImageViewNext
                 android:id="@+id/imageViewNext2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_launcher"/>
+                android:layout_height="200dp"
+                android:layout_width="200dp"
+                android:background="#410DFF"
+                android:src="@drawable/ic_launcher"
+                android:scaleType="fitEnd" />
 
         <net.frakbot.imageviewex.ImageViewNext
                 android:id="@+id/imageViewNext3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_launcher"/>
+                android:layout_height="300dp"
+                android:layout_width="300dp"
+                android:background="#FFFFFF"
+                android:src="@drawable/ic_launcher"
+                android:scaleType="center" />
 
         <net.frakbot.imageviewex.ImageViewNext
                 android:id="@+id/imageViewNext4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_launcher"/>
+                android:layout_height="200dp"
+                android:layout_width="200dp"
+                android:background="#8EFF69"
+                android:src="@drawable/ic_launcher"
+                android:scaleType="fitXY" />
 
         <net.frakbot.imageviewex.ImageViewNext
                 android:id="@+id/imageViewNext5"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_launcher"/>
+                android:background="#FFCF69"
+                android:src="@drawable/ic_launcher"
+                android:scaleType="center" />
 
     </LinearLayout>
 </ScrollView>
