@@ -23,6 +23,7 @@ import java.io.IOException;
  *
  * @author Francesco Pontillo, Sebastiano Poggi
  */
+@SuppressWarnings("UnusedDeclaration")
 public class ImageViewNext extends ImageViewEx {
 
     private Drawable loadingD;
@@ -30,21 +31,21 @@ public class ImageViewNext extends ImageViewEx {
 
     private Drawable errorD;
     private static int classErrorResId;
-    
+
     private String mUrl;
-    
+
     protected ImageViewExRequestManager mRequestManager;
     protected Request mCurrentRequest;
     protected RequestListener mCurrentRequestListener;
-    
+
     private static int mMemCacheSize = 10 * 1024 * 1024; // 10MiB
 	private static LruCache<String, byte[]> mMemCache;
-	
+
 	private static int mAppVersion = 1;
 	private static int mDiskCacheValueCount = 1;
     private static int mDiskCacheSize = 50 * 1024 * 1024; // 50MiB
 	private static DiskLruCache mDiskCache;
-	
+
 	private static boolean cacheInit = false;
 
 	/** {@inheritDoc} */
@@ -52,7 +53,7 @@ public class ImageViewNext extends ImageViewEx {
         super(context);
         mRequestManager = ImageViewExRequestManager.from(context);
     }
-    
+
     /**
      * Creates an instance for the class.
      *
@@ -63,7 +64,7 @@ public class ImageViewNext extends ImageViewEx {
         super(context, attrs);
         mRequestManager = ImageViewExRequestManager.from(context);
     }
-    
+
     /**
 	 * @return The in-memory cache.
 	 */
@@ -137,7 +138,7 @@ public class ImageViewNext extends ImageViewEx {
 			try {
 				mDiskCache = DiskLruCache.open(
 					diskCacheDir, mAppVersion, mDiskCacheValueCount, mDiskCacheSize);
-			} catch (IOException e) { }
+			} catch (IOException ignored) { }
 			cacheInit = true;
     	}
     }
@@ -200,9 +201,9 @@ public class ImageViewNext extends ImageViewEx {
      * @return {@link Drawable} to display after an error loading an image.
      */
     public Drawable getErrorDrawable() {
-        return (errorD != null ? errorD : getResources().getDrawable(classErrorResId));
+        return errorD != null ? errorD : getResources().getDrawable(classErrorResId);
     }
-    
+
     /**
      * Sets the content of the {@link ImageViewNext} with the data to be downloaded
      * from the provided URL.
@@ -210,33 +211,36 @@ public class ImageViewNext extends ImageViewEx {
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     public void setUrl(String url) {
-    	this.mUrl = url;
+    	mUrl = url;
     	// Abort the current request before starting another one
     	if (mCurrentRequest != null
     		&& mRequestManager.isRequestInProgress(mCurrentRequest)) {
     		mRequestManager.removeRequestListener(mCurrentRequestListener);
     	}
-    	// Start the whole retrieval chain
+
+        setImageDrawable(mEmptyDrawable);    // This also stops any ongoing loading process
+
+        // Start the whole retrieval chain
     	getFromMemCache(url);
     }
-    
+
     /**
      * Returns the current URL set to the {@link ImageViewNext}.
-     * The URL will be returned regardless of the existence of 
+     * The URL will be returned regardless of the existence of
      * the image or of the caching/downloading progress.
-     * 
+     *
      * @return The URL set for this {@link ImageViewNext}.
      */
     public String getUrl() {
-    	return this.mUrl;
+    	return mUrl;
     }
-    
+
     /**
      * Tries to get the image from the memory cache.
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     private void getFromMemCache(String url) {
-    	Request mRequest = 
+    	Request mRequest =
 				ImageViewExRequestFactory.getImageMemCacheRequest(url);
 		mCurrentRequestListener = new ImageMemCacheListener(this);
 		mRequestManager.execute(mRequest, mCurrentRequestListener);
@@ -247,7 +251,7 @@ public class ImageViewNext extends ImageViewEx {
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     private void getFromDiskCache(String url) {
-    	Request mRequest = 
+    	Request mRequest =
 				ImageViewExRequestFactory.getImageDiskCacheRequest(url);
 		mCurrentRequestListener = new ImageDiskCacheListener(this);
 		mRequestManager.execute(mRequest, mCurrentRequestListener);
@@ -258,12 +262,12 @@ public class ImageViewNext extends ImageViewEx {
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     private void getFromNetwork(String url) {
-    	Request mRequest = 
+    	Request mRequest =
 				ImageViewExRequestFactory.getImageDownloaderRequest(url);
 		mCurrentRequestListener = new ImageDownloadListener(this);
 		mRequestManager.execute(mRequest, mCurrentRequestListener);
     }
-    
+
     /**
      * Called when the image is got from whatever the source.
      * Override this to get the appropriate callback.
@@ -272,7 +276,7 @@ public class ImageViewNext extends ImageViewEx {
     protected void onSuccess(byte[] image) {
     	setByteArray(image);
     }
-    
+
     /**
      * Called when the image is got from the memory cache.
      * Override this to get the appropriate callback.
@@ -281,7 +285,7 @@ public class ImageViewNext extends ImageViewEx {
     protected void onMemCacheHit(byte[] image) {
     	onSuccess(image);
     }
-    
+
     /**
      * Called when there is a memory cache miss for the image.
      * Override this to get the appropriate callback.
@@ -289,19 +293,19 @@ public class ImageViewNext extends ImageViewEx {
     protected void onMemCacheMiss() {
     	Drawable loadingDrawable = getLoadingDrawable();
         if (loadingDrawable != null) {
-    		ScaleType scaleType = this.getScaleType();
+    		ScaleType scaleType = getScaleType();
             if (scaleType != null) {
-                this.setScaleType(scaleType);
+                setScaleType(scaleType);
             } else {
-                this.setScaleType(ScaleType.CENTER_INSIDE);
+                setScaleType(ScaleType.CENTER_INSIDE);
             }
-            this.setImageDrawable(loadingDrawable);
+            setImageDrawable(loadingDrawable);
             if (loadingDrawable instanceof AnimationDrawable) {
                 ((AnimationDrawable) loadingDrawable).start();
             }
         }
     }
-    
+
     /**
      * Called when the image is got from the disk cache.
      * Override this to get the appropriate callback.
@@ -310,7 +314,7 @@ public class ImageViewNext extends ImageViewEx {
     protected void onDiskCacheHit(byte[] image) {
     	onSuccess(image);
     }
-    
+
     /**
      * Called when there is a disk cache miss for the image.
      * Override this to get the appropriate callback.
@@ -318,7 +322,7 @@ public class ImageViewNext extends ImageViewEx {
     protected void onDiskCacheMiss() {
     	// No default implementation
     }
-    
+
     /**
      * Called when the image is got from the network.
      * Override this to get the appropriate callback.
@@ -327,7 +331,7 @@ public class ImageViewNext extends ImageViewEx {
     protected void onNetworkHit(byte[] image) {
     	onSuccess(image);
     }
-    
+
     /**
      * Called when there is a network miss for the image,
      * usually a 404.
@@ -336,7 +340,7 @@ public class ImageViewNext extends ImageViewEx {
     protected void onNetworkMiss() {
     	// No default implementation
     }
-    
+
     /**
      * Called when the image could not be found anywhere.
      * Override this to get the appropriate callback.
@@ -344,13 +348,13 @@ public class ImageViewNext extends ImageViewEx {
     protected void onMiss() {
     	Drawable errorDrawable = getErrorDrawable();
         if (getErrorDrawable() != null) {
-        	ScaleType scaleType = this.getScaleType();
+        	ScaleType scaleType = getScaleType();
         	if (scaleType != null) {
-                this.setScaleType(scaleType);
+                setScaleType(scaleType);
             } else {
-                this.setScaleType(ScaleType.CENTER_INSIDE);
+                setScaleType(ScaleType.CENTER_INSIDE);
             }
-        	this.setImageDrawable(errorDrawable);
+            setImageDrawable(errorDrawable);
             if (errorDrawable instanceof AnimationDrawable) {
                 ((AnimationDrawable) errorDrawable).start();
             }
@@ -363,14 +367,14 @@ public class ImageViewNext extends ImageViewEx {
      */
     private void setByteArray(final byte[] image) {
     	if (image != null) {
-            ScaleType scaleType = this.getScaleType();
+            ScaleType scaleType = getScaleType();
             if (scaleType != null) {
-                this.setScaleType(scaleType);
+                setScaleType(scaleType);
             }
-			this.setSource(image);
+            setSource(image);
         }
     }
-    
+
     /**
      * Operation listener for the memory cache retrieval operation.
      * @author Francesco Pontillo
@@ -384,7 +388,7 @@ public class ImageViewNext extends ImageViewEx {
 
     	@Override
     	public void onRequestFinished(Request request, Bundle resultData) {
-    		byte[] image = 
+    		byte[] image =
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
     		if (image == null)
         		handleMiss();
@@ -406,7 +410,7 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestCustomError(Request request, Bundle resultData) {
     		handleMiss();
     	}
-    	
+
     	/**
     	 * Generic function to handle the cache miss.
     	 */
@@ -432,7 +436,7 @@ public class ImageViewNext extends ImageViewEx {
 
     	@Override
     	public void onRequestFinished(Request request, Bundle resultData) {
-    		byte[] image = 
+    		byte[] image =
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
     		if (image == null)
         		handleMiss();
@@ -454,7 +458,7 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestCustomError(Request request, Bundle resultData) {
     		handleMiss();
     	}
-    	
+
     	/**
     	 * Generic function to handle the cache miss.
     	 */
@@ -480,7 +484,7 @@ public class ImageViewNext extends ImageViewEx {
 
     	@Override
     	public void onRequestFinished(Request request, Bundle resultData) {
-    		byte[] image = 
+    		byte[] image =
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
     		if (image == null)
         		handleMiss();
@@ -502,7 +506,7 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestCustomError(Request request, Bundle resultData) {
     		handleMiss();
     	}
-    	
+
     	/**
     	 * Generic function to handle the network miss.
     	 */

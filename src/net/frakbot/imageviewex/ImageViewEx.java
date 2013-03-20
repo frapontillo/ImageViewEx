@@ -9,6 +9,7 @@ import android.graphics.Canvas;
 import android.graphics.Movie;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
@@ -28,6 +29,7 @@ import java.io.InputStream;
  *
  * @author Sebastiano Poggi, Francesco Pontillo
  */
+@SuppressWarnings("UnusedDeclaration")
 public class ImageViewEx extends ImageView {
 
     private static final String TAG = ImageViewEx.class.getSimpleName();
@@ -55,12 +57,16 @@ public class ImageViewEx extends ImageView {
     private Movie mGif;
     private double mGifStartTime;
     private int mFrameDuration = 67;
-    private Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler();
     private Thread mUpdater;
 
     private ImageAlign mImageAlign = ImageAlign.NONE;
 
-    private DisplayMetrics mDm;
+    private final DisplayMetrics mDm;
+    private final SetDrawableRunnable mSetDrawableRunnable = new SetDrawableRunnable();
+    private final SetGifRunnable mSetGifRunnable = new SetGifRunnable();
+
+    protected Drawable mEmptyDrawable = new ColorDrawable(0x00000000);
 
     ///////////////////////////////////////////////////////////
     ///                  CONSTRUCTORS                       ///
@@ -145,6 +151,7 @@ public class ImageViewEx extends ImageView {
     public void setSource(final byte[] src) {
         if (src != null) {
             final ImageViewEx thisImageView = this;
+            setImageDrawable(mEmptyDrawable);
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -152,7 +159,7 @@ public class ImageViewEx extends ImageView {
                 }
             });
             t.setPriority(Thread.MIN_PRIORITY);
-            t.setName("ImageSetter@" + this.hashCode());
+            t.setName("ImageSetter@" + hashCode());
             t.run();
         }
     }
@@ -198,22 +205,9 @@ public class ImageViewEx extends ImageView {
             final Drawable d = Converters.byteArrayToDrawable(src, mOptions, getContext());
 
             // We need to run this on the UI thread
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    setImageDrawable(d);
-                    measure(0, 0);
-                    requestLayout();
-
-                    try {
-                        AnimationDrawable animationDrawable = (AnimationDrawable) getDrawable();
-                        animationDrawable.start();
-                    }
-                    catch (Exception ignored) {
-                    }
-                }
-            });
-
+            stopLoading();
+            mSetDrawableRunnable.setDrawable(d);
+            mHandler.post(mSetDrawableRunnable);
         }
         else {
             // Disables the HW acceleration when viewing a GIF on Android 3+
@@ -222,38 +216,16 @@ public class ImageViewEx extends ImageView {
             }
 
             // We need to run this on the UI thread
-            mHandler.post(new MovieRunnable(gif));
+            stopLoading();
+            mSetGifRunnable.setGif(gif);
+            mHandler.post(mSetGifRunnable);
         }
-    }
-    
-    /**
-     * Runnable that sets the animated gif.
-     * @author Francesco Pontillo, Sebastiano Poggi
-     */
-    private class MovieRunnable implements Runnable {
-    	
-    	private Movie gif;
-    	
-    	public MovieRunnable(Movie gif) {
-    		this.gif = gif;
-    	}
-    	
-		@Override
-		public void run() {
-			measure(0, 0);
-			requestLayout();
-			
-			initializeDefaultValues();
-			mImageSource = IMAGE_SOURCE_GIF;
-			mGif = gif;
-			play();
-		}
-    	
     }
 
     /** {@inheritDoc} */
     public void setImageResource(int resId) {
         initializeDefaultValues();
+        stopLoading();
         super.setImageResource(resId);
         mImageSource = IMAGE_SOURCE_RESOURCE;
     }
@@ -262,6 +234,7 @@ public class ImageViewEx extends ImageView {
     public void setImageDrawable(Drawable drawable) {
         blockLayoutIfPossible();
         initializeDefaultValues();
+        stopLoading();
         super.setImageDrawable(drawable);
         mBlockLayout = false;
         mImageSource = IMAGE_SOURCE_DRAWABLE;
@@ -270,6 +243,7 @@ public class ImageViewEx extends ImageView {
     /** {@inheritDoc} */
     public void setImageBitmap(Bitmap bm) {
         initializeDefaultValues();
+        stopLoading();
         super.setImageBitmap(bm);
         mImageSource = IMAGE_SOURCE_BITMAP;
     }
@@ -389,6 +363,31 @@ public class ImageViewEx extends ImageView {
         }
     }
 
+    @Override
+    public void setBackgroundColor(int color) {
+        super.setBackgroundColor(color);
+        mEmptyDrawable = new ColorDrawable(color);
+    }
+
+    @Override
+    public void setBackgroundResource(int resid) {
+        super.setBackgroundResource(resid);
+        mEmptyDrawable = getBackground();
+
+        if (mEmptyDrawable == null) {
+            mEmptyDrawable = new ColorDrawable(0x00000000);
+        }
+    }
+
+    @Override
+    public void setBackgroundDrawable(Drawable d) {
+        super.setBackgroundDrawable(d);
+
+        mEmptyDrawable = d != null ?
+                         d :
+                         new ColorDrawable(0x00000000);
+    }
+
 
     ///////////////////////////////////////////////////////////
     ///                 PUBLIC GETTERS                      ///
@@ -492,7 +491,7 @@ public class ImageViewEx extends ImageView {
      * @see ImageViewEx#setClassLevelDensity(int)
      */
     public static boolean isClassLevelDensitySet() {
-        return (mOverriddenClassDensity != -1);
+        return mOverriddenClassDensity != -1;
     }
 
     /**
@@ -587,7 +586,7 @@ public class ImageViewEx extends ImageView {
 
                         mHandler.post(new Runnable() {
                             public void run() {
-                                ImageViewEx.this.invalidate();
+                                invalidate();
                             }
                         });
 
@@ -671,7 +670,7 @@ public class ImageViewEx extends ImageView {
                 canvas.translate(0.0f, calcTopAlignYDisplacement());
             }
 
-            mGif.draw(canvas, this.getWidth() - (mGif.width() * mScale), this.getHeight() - (mGif.height() * mScale));
+            mGif.draw(canvas, getWidth() - (mGif.width() * mScale), getHeight() - (mGif.height() * mScale));
 
             canvas.restoreToCount(saveCnt);
         }
@@ -729,6 +728,7 @@ public class ImageViewEx extends ImageView {
      *
      * @return The width of the view, honoring constraints from measureSpec
      */
+    @SuppressWarnings("IfMayBeConditional")
     private int measureWidth(int measureSpec) {
         int result;
         int specMode = MeasureSpec.getMode(measureSpec);
@@ -768,6 +768,7 @@ public class ImageViewEx extends ImageView {
      *
      * @return The height of the view, honoring constraints from measureSpec
      */
+    @SuppressWarnings("IfMayBeConditional")
     private int measureHeight(int measureSpec) {
         int result;
         int specMode = MeasureSpec.getMode(measureSpec);
@@ -807,7 +808,7 @@ public class ImageViewEx extends ImageView {
      */
     private float calcTopAlignYDisplacement() {
         int viewHeight = getHeight();
-        int imgHeight = 0;
+        int imgHeight;
         float displacement = 0f;
 
         if (viewHeight <= 0) {
@@ -817,7 +818,7 @@ public class ImageViewEx extends ImageView {
 
         if (mGif == null) {
             final Drawable tmpDrawable = getDrawable();
-            if ((tmpDrawable == null || !(tmpDrawable instanceof BitmapDrawable)) || mGif == null) {
+            if (!(tmpDrawable instanceof BitmapDrawable) || mGif == null) {
                 return 0f;     // Nothing to do here
             }
 
@@ -830,6 +831,7 @@ public class ImageViewEx extends ImageView {
             imgHeight = mGif.height();
         }
 
+        //noinspection IfMayBeConditional
         if (viewHeight > imgHeight) {
             displacement = -1 * (viewHeight - imgHeight);   // Just align to top edge
         }
@@ -857,12 +859,18 @@ public class ImageViewEx extends ImageView {
      * @return true if the animation can be started, false otherwise.
      */
     private boolean internalCanAnimate() {
-        if (canAlwaysAnimate()) {
-            return canAnimate();
-        }
-        else {
-            return canAlwaysAnimate();
-        }
+        return canAlwaysAnimate() ? canAnimate() : canAlwaysAnimate();
+    }
+
+    /**
+     * Stops any currently running async loading (deserialization and
+     * parsing of the image).
+     */
+    public void stopLoading() {
+        mSetDrawableRunnable.setDrawable(null);
+        mSetGifRunnable.setGif(null);
+        mHandler.removeCallbacks(mSetDrawableRunnable);
+        mHandler.removeCallbacks(mSetGifRunnable);
     }
 
 
@@ -895,5 +903,74 @@ public class ImageViewEx extends ImageView {
                 return new SavedState[size];
             }
         };
+    }
+
+    /**
+     * A Runnable that sets a specified Drawable on the ImageView.
+     */
+    private class SetDrawableRunnable implements Runnable {
+
+        private Drawable mDrawable;
+        private final Object mDrawableLock = new Object();
+
+        private void setDrawable(Drawable drawable) {
+            synchronized (mDrawableLock) {
+                mDrawable = drawable;
+            }
+        }
+
+        @Override
+        public void run() {
+            synchronized (mDrawableLock) {
+                if (mDrawable == null) {
+                    Log.v(TAG, "Loading the Drawable has been aborted");
+                    return;
+                }
+
+                setImageDrawable(mDrawable);
+                measure(0, 0);
+                requestLayout();
+
+                try {
+                    AnimationDrawable animationDrawable = (AnimationDrawable) getDrawable();
+                    animationDrawable.start();
+                }
+                catch (Exception ignored) {
+                }
+            }
+        }
+    }
+
+    /**
+     * A Runnable that sets a specified Movie on the ImageView.
+     */
+    private class SetGifRunnable implements Runnable {
+
+        private Movie mGifMovie;
+        private final Object mGifMovieLock = new Object();
+
+        private void setGif(Movie drawable) {
+            synchronized (mGifMovieLock) {
+                mGifMovie = drawable;
+            }
+        }
+
+        @Override
+        public void run() {
+            synchronized (mGifMovieLock) {
+                if (mGifMovie == null) {
+                    Log.v(TAG, "Loading the GIF has been aborted");
+                    return;
+                }
+
+                measure(0, 0);
+                requestLayout();
+
+                initializeDefaultValues();
+                mImageSource = IMAGE_SOURCE_GIF;
+                mGif = mGifMovie;
+                play();
+            }
+        }
     }
 }

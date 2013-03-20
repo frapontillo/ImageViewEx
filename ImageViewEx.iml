@@ -59,8 +59,8 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="disklrucache" exported="" />
-    <orderEntry type="module" module-name="DataDroid" exported="" />
+    <orderEntry type="module" module-name="DataDroid-ImgViewEx" scope="PROVIDED" />
+    <orderEntry type="module" module-name="disklrucache-ImgViewEx" scope="PROVIDED" />
   </component>
 </module>
 
