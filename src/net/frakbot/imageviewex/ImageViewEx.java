@@ -6,6 +6,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Matrix.ScaleToFit;
 import android.graphics.Movie;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
@@ -19,6 +21,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 
 import java.io.InputStream;
 
@@ -61,6 +64,7 @@ public class ImageViewEx extends ImageView {
     private ImageAlign mImageAlign = ImageAlign.NONE;
 
     private DisplayMetrics mDm;
+    private ScaleType mScaleType;
 
     ///////////////////////////////////////////////////////////
     ///                  CONSTRUCTORS                       ///
@@ -272,6 +276,12 @@ public class ImageViewEx extends ImageView {
         initializeDefaultValues();
         super.setImageBitmap(bm);
         mImageSource = IMAGE_SOURCE_BITMAP;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setScaleType(ScaleType scaleType) {
+    	super.setScaleType(scaleType);
     }
 
     /**
@@ -657,8 +667,109 @@ public class ImageViewEx extends ImageView {
             int relTime = (int) ((now - mGifStartTime) % dur);
             mGif.setTime(relTime);
             int saveCnt = canvas.save(Canvas.MATRIX_SAVE_FLAG);
+            
             canvas.scale(mScale, mScale);
 
+        	// Get the current dimensions of the view and the gif
+            float vWidth = this.getWidth();
+            float vHeight = this.getHeight();
+            float gWidth = mGif.width() * mScale;
+            float gHeight = mGif.height() * mScale;
+
+            // Disable the default scaling, it can mess things up
+            if (mScaleType == null) {
+            	mScaleType = getScaleType();
+            	this.setScaleType(ScaleType.MATRIX);
+            }
+            float x = 0;
+            float y = 0;
+            
+            switch (mScaleType) {
+        		case CENTER:
+        			/* Center the image in the view, but perform no scaling. */
+	        		x = (vWidth - gWidth) / 2 / mScale;
+	        		y = (vHeight - gHeight) / 2 / mScale;
+	        		break;
+            	case CENTER_CROP:
+            		/*
+            		 * Scale the image uniformly (maintain the image's aspect ratio)
+            		 * so that both dimensions (width and height) of the image will
+            		 * be equal to or larger than the corresponding dimension of the
+            		 * view (minus padding). The image is then centered in the view.
+            		 */
+            		float sCenterCrop = 1;
+            		float minDimensionCenterCrop = Math.min(gWidth, gHeight);
+            		if (minDimensionCenterCrop == gWidth) {
+            			sCenterCrop = vWidth / gWidth;
+            		} else {
+            			sCenterCrop = vHeight / gHeight;
+            		}
+	        		x = (vWidth - gWidth * sCenterCrop) / 2 / (sCenterCrop * mScale);
+	        		y = (vHeight - gHeight * sCenterCrop) / 2 / (sCenterCrop * mScale);
+	        		canvas.scale(sCenterCrop, sCenterCrop);
+            		break;
+            	case FIT_CENTER:
+            		/*
+            		 * Compute a scale that will maintain the original src aspect ratio,
+            		 * but will also ensure that src fits entirely inside dst.
+            		 * At least one axis (X or Y) will fit exactly.
+            		 * The result is centered inside dst.
+            		 */
+            		// TODO: is this like the followin CENTER_INSIDE?
+            	case CENTER_INSIDE:
+            		/*
+            		 * Scale the image uniformly (maintain the image's aspect ratio)
+            		 * so that both dimensions (width and height) of the image will
+            		 * be equal to or less than the corresponding dimension of the
+            		 * view (minus padding). The image is then centered in the view.
+            		 */
+            		// TODO:
+            		float sCenterInside = 1;
+            		float maxDimensionCenterInside = Math.max(gWidth, gHeight);
+            		if (maxDimensionCenterInside == gWidth) {
+            			sCenterInside = vWidth / gWidth;
+            		} else {
+            			sCenterInside = vHeight / gHeight;
+            		}
+	        		x = (vWidth - gWidth * sCenterInside) / 2 / (sCenterInside * mScale);
+	        		y = (vHeight - gHeight * sCenterInside) / 2 / (sCenterInside * mScale);
+	        		canvas.scale(sCenterInside, sCenterInside);
+            		break;
+            	case FIT_START:
+            		/*
+            		 * Compute a scale that will maintain the original src aspect ratio,
+            		 * but will also ensure that src fits entirely inside dst.
+            		 * At least one axis (X or Y) will fit exactly.
+            		 * The result is centered inside dst.
+            		 */
+            		x = 0;
+            		y = 0;
+            		// TODO: is this like CENTER_INSIDE?
+            		break;
+            	case FIT_END:
+            		/*
+            		 * Compute a scale that will maintain the original src aspect ratio,
+            		 * but will also ensure that src fits entirely inside dst.
+            		 * At least one axis (X or Y) will fit exactly.
+            		 * END aligns the result to the right and bottom edges of dst.
+            		 */
+            		x = (vWidth - gWidth) / mScale;
+            		y = (vHeight - gHeight) / mScale;
+            		// TODO: is this like CENTER_INSIDE?
+            		break;
+            	case FIT_XY:
+            		/*
+            		 * Scale in X and Y independently, so that src matches dst exactly.
+            		 * This may change the aspect ratio of the src.
+            		 */
+            		// TODO: handle this special case
+            		break;
+            	case MATRIX:
+            		// TODO: handle the currently set matrix
+            		break;
+            }
+            
+            /* TODO: re-enable when the ScaleType is set
             if (mImageAlign != ImageAlign.NONE) {
                 // We have an alignment override.
                 // Note: at the moment we only have TOP as custom alignment,
@@ -670,12 +781,17 @@ public class ImageViewEx extends ImageView {
 
                 canvas.translate(0.0f, calcTopAlignYDisplacement());
             }
-
-            mGif.draw(canvas, this.getWidth() - (mGif.width() * mScale), this.getHeight() - (mGif.height() * mScale));
-
+            */
+            
+        	// mGif.draw(canvas, this.getWidth() - mGif.width() * mScale, this.getHeight() - mGif.height() * mScale);
+        	mGif.draw(canvas, x, y);
+        	
             canvas.restoreToCount(saveCnt);
         }
         else {
+        	// Reset the original scale type
+        	super.setScaleType(getScaleType());
+        	
             if (mImageAlign == ImageAlign.NONE) {
                 // Everything is normal when there is no alignment override
                 super.onDraw(canvas);

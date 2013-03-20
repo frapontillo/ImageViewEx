@@ -18,6 +18,7 @@
                 android:id="@+id/imageViewEx1"
                 android:layout_width="wrap_content"
                 android:layout_height="130dp"
+                android:scaleType="fitXY"
                 android:background="#0f0"
                 android:src="@drawable/ic_launcher"/>
 

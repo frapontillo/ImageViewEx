@@ -16,10 +16,11 @@
 
         <net.frakbot.imageviewex.ImageViewNext
                 android:id="@+id/imageViewNext1"
-                android:layout_width="wrap_content"
-                android:layout_height="130dp"
+                android:layout_height="400dp"
+                android:layout_width="400dp"
                 android:background="#f00"
-                android:src="@drawable/ic_launcher"/>
+                android:src="@drawable/ic_launcher"
+                android:scaleType="centerInside" />
 
         <net.frakbot.imageviewex.ImageViewNext
                 android:id="@+id/imageViewNext2"
