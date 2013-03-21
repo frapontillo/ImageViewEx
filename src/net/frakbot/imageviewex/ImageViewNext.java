@@ -26,27 +26,40 @@ import java.io.IOException;
 @SuppressWarnings("UnusedDeclaration")
 public class ImageViewNext extends ImageViewEx {
 
-    private Drawable loadingD;
-    private static int classLoadingResId;
+    private static final int DISK_CACHE_VALUE_COUNT = 1;
 
-    private Drawable errorD;
-    private static int classErrorResId;
+    private Drawable mLoadingD;
+    private static int mClassLoadingResId;
+    private Drawable mErrorD;
+    private static int mClassErrorResId;
 
     private String mUrl;
-
     protected ImageViewExRequestManager mRequestManager;
     protected Request mCurrentRequest;
+
     protected RequestListener mCurrentRequestListener;
-
     private static int mMemCacheSize = 10 * 1024 * 1024; // 10MiB
-	private static LruCache<String, byte[]> mMemCache;
 
-	private static int mAppVersion = 1;
-	private static int mDiskCacheValueCount = 1;
+	private static LruCache<String, byte[]> mMemCache;
+    private static int mAppVersion = 1;
     private static int mDiskCacheSize = 50 * 1024 * 1024; // 50MiB
 	private static DiskLruCache mDiskCache;
 
-	private static boolean cacheInit = false;
+	private static boolean mCacheInit = false;
+
+    private ImageLoadCompletionListener mLoadCallbacks;
+
+    /**
+     * Represents a cache level.
+     */
+    public enum CacheLevel {
+        /** The first level of cache: the memory cache */
+        MEMORY,
+        /** The second level of cache: the disk cache */
+        DISK,
+        /** No caching, direct fetching from the network */
+        NETWORK
+    }
 
 	/** {@inheritDoc} */
     public ImageViewNext(Context context) {
@@ -63,6 +76,20 @@ public class ImageViewNext extends ImageViewEx {
     public ImageViewNext(Context context, AttributeSet attrs) {
         super(context, attrs);
         mRequestManager = ImageViewExRequestManager.from(context);
+    }
+
+    /** Gets the current image loading callback, if any */
+    public ImageLoadCompletionListener getLoadCallbacks() {
+        return mLoadCallbacks;
+    }
+
+    /**
+     * Sets the image loading callback.
+     *
+     * @param loadCallbacks The listener instance, or null to clear it.
+     */
+    public void setLoadCallbacks(ImageLoadCompletionListener loadCallbacks) {
+        mLoadCallbacks = loadCallbacks;
     }
 
     /**
@@ -107,6 +134,24 @@ public class ImageViewNext extends ImageViewEx {
 		ImageViewNext.mAppVersion = appVersion;
 	}
 
+    /**
+     * Sets the image loading callbacks listener.
+     *
+     * @param l The listener, or null to clear it.
+     */
+    public void setImageLoadCallbacks(ImageLoadCompletionListener l) {
+        mLoadCallbacks = l;
+    }
+
+    /**
+     * Gets the current image loading callbacks listener, if any.
+     *
+     * @return Returns the callbacks listener.
+     */
+    public ImageLoadCompletionListener getImageLoadCallbacks() {
+        return mLoadCallbacks;
+    }
+
 	/**
 	 * @return The disk cache max size, in bits.
 	 */
@@ -127,7 +172,7 @@ public class ImageViewNext extends ImageViewEx {
 	 * This method is idempotent.
 	 */
     public static void initCaches(Context context) {
-    	if (!cacheInit) {
+    	if (!mCacheInit) {
 	    	mMemCache = new LruCache<String, byte[]>(mMemCacheSize) {
 				protected int sizeOf(String key, byte[] value) {
 					return value.length;
@@ -137,9 +182,9 @@ public class ImageViewNext extends ImageViewEx {
 				CacheHelper.getDiskCacheDir(context, "imagecache");
 			try {
 				mDiskCache = DiskLruCache.open(
-					diskCacheDir, mAppVersion, mDiskCacheValueCount, mDiskCacheSize);
+					diskCacheDir, mAppVersion, DISK_CACHE_VALUE_COUNT, mDiskCacheSize);
 			} catch (IOException ignored) { }
-			cacheInit = true;
+			mCacheInit = true;
     	}
     }
 
@@ -150,7 +195,7 @@ public class ImageViewNext extends ImageViewEx {
      *                                  while loading an image.
      */
     public static void setClassLoadingDrawable(int classLoadingDrawableResId) {
-        classLoadingResId = classLoadingDrawableResId;
+        mClassLoadingResId = classLoadingDrawableResId;
     }
 
     /**
@@ -159,7 +204,7 @@ public class ImageViewNext extends ImageViewEx {
      * @param loadingDrawable the {@link Drawable} to display while loading an image.
      */
     public void setLoadingDrawable(Drawable loadingDrawable) {
-        loadingD = loadingDrawable;
+        mLoadingD = loadingDrawable;
     }
 
     /**
@@ -168,11 +213,11 @@ public class ImageViewNext extends ImageViewEx {
      * @return {@link Drawable} to display while loading.
      */
     public Drawable getLoadingDrawable() {
-        if (loadingD != null) {
-            return loadingD;
+        if (mLoadingD != null) {
+            return mLoadingD;
         }
         else {
-            return classLoadingResId > 0 ? getResources().getDrawable(classLoadingResId) : null;
+            return mClassLoadingResId > 0 ? getResources().getDrawable(mClassLoadingResId) : null;
         }
     }
 
@@ -183,7 +228,7 @@ public class ImageViewNext extends ImageViewEx {
      *                                to display after an error getting an image.
      */
     public static void setClassErrorDrawable(int classErrorDrawableResId) {
-        classErrorResId = classErrorDrawableResId;
+        mClassErrorResId = classErrorDrawableResId;
     }
 
     /**
@@ -192,7 +237,7 @@ public class ImageViewNext extends ImageViewEx {
      * @param errorDrawable the {@link Drawable} to display after an error getting an image.
      */
     public void setErrorDrawable(Drawable errorDrawable) {
-        errorD = errorDrawable;
+        mErrorD = errorDrawable;
     }
 
     /**
@@ -201,7 +246,7 @@ public class ImageViewNext extends ImageViewEx {
      * @return {@link Drawable} to display after an error loading an image.
      */
     public Drawable getErrorDrawable() {
-        return errorD != null ? errorD : getResources().getDrawable(classErrorResId);
+        return mErrorD != null ? mErrorD : getResources().getDrawable(mClassErrorResId);
     }
 
     /**
@@ -244,6 +289,10 @@ public class ImageViewNext extends ImageViewEx {
 				ImageViewExRequestFactory.getImageMemCacheRequest(url);
 		mCurrentRequestListener = new ImageMemCacheListener(this);
 		mRequestManager.execute(mRequest, mCurrentRequestListener);
+
+        if (mLoadCallbacks != null) {
+            mLoadCallbacks.onLoadStarted(this, CacheLevel.MEMORY);
+        }
     }
 
     /**
@@ -255,6 +304,10 @@ public class ImageViewNext extends ImageViewEx {
 				ImageViewExRequestFactory.getImageDiskCacheRequest(url);
 		mCurrentRequestListener = new ImageDiskCacheListener(this);
 		mRequestManager.execute(mRequest, mCurrentRequestListener);
+
+        if (mLoadCallbacks != null) {
+            mLoadCallbacks.onLoadStarted(this, CacheLevel.DISK);
+        }
     }
 
     /**
@@ -266,6 +319,10 @@ public class ImageViewNext extends ImageViewEx {
 				ImageViewExRequestFactory.getImageDownloaderRequest(url);
 		mCurrentRequestListener = new ImageDownloadListener(this);
 		mRequestManager.execute(mRequest, mCurrentRequestListener);
+
+        if (mLoadCallbacks != null) {
+            mLoadCallbacks.onLoadStarted(this, CacheLevel.NETWORK);
+        }
     }
 
     /**
@@ -284,6 +341,10 @@ public class ImageViewNext extends ImageViewEx {
      */
     protected void onMemCacheHit(byte[] image) {
     	onSuccess(image);
+
+        if (mLoadCallbacks != null) {
+            mLoadCallbacks.onLoadCompleted(this, CacheLevel.MEMORY);
+        }
     }
 
     /**
@@ -304,6 +365,10 @@ public class ImageViewNext extends ImageViewEx {
                 ((AnimationDrawable) loadingDrawable).start();
             }
         }
+
+        if (mLoadCallbacks != null) {
+            mLoadCallbacks.onLoadError(this, CacheLevel.MEMORY);
+        }
     }
 
     /**
@@ -313,6 +378,10 @@ public class ImageViewNext extends ImageViewEx {
      */
     protected void onDiskCacheHit(byte[] image) {
     	onSuccess(image);
+
+        if (mLoadCallbacks != null) {
+            mLoadCallbacks.onLoadCompleted(this, CacheLevel.DISK);
+        }
     }
 
     /**
@@ -320,7 +389,9 @@ public class ImageViewNext extends ImageViewEx {
      * Override this to get the appropriate callback.
      */
     protected void onDiskCacheMiss() {
-    	// No default implementation
+        if (mLoadCallbacks != null) {
+            mLoadCallbacks.onLoadError(this, CacheLevel.DISK);
+        }
     }
 
     /**
@@ -330,6 +401,10 @@ public class ImageViewNext extends ImageViewEx {
      */
     protected void onNetworkHit(byte[] image) {
     	onSuccess(image);
+
+        if (mLoadCallbacks != null) {
+            mLoadCallbacks.onLoadCompleted(this, CacheLevel.NETWORK);
+        }
     }
 
     /**
@@ -338,7 +413,9 @@ public class ImageViewNext extends ImageViewEx {
      * Override this to get the appropriate callback.
      */
     protected void onNetworkMiss() {
-    	// No default implementation
+        if (mLoadCallbacks != null) {
+            mLoadCallbacks.onLoadError(this, CacheLevel.NETWORK);
+        }
     }
 
     /**
@@ -390,11 +467,13 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestFinished(Request request, Bundle resultData) {
     		byte[] image =
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
-    		if (image == null)
-        		handleMiss();
-    		else
-    			mImageViewNext.onMemCacheHit(image);
-    	}
+            if (image == null) {
+                handleMiss();
+            }
+            else {
+                mImageViewNext.onMemCacheHit(image);
+            }
+        }
 
     	@Override
     	public void onRequestConnectionError(Request request, int statusCode) {
@@ -438,11 +517,13 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestFinished(Request request, Bundle resultData) {
     		byte[] image =
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
-    		if (image == null)
-        		handleMiss();
-    		else
-    			mImageViewNext.onDiskCacheHit(image);
-    	}
+            if (image == null) {
+                handleMiss();
+            }
+            else {
+                mImageViewNext.onDiskCacheHit(image);
+            }
+        }
 
     	@Override
     	public void onRequestConnectionError(Request request, int statusCode) {
@@ -486,11 +567,13 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestFinished(Request request, Bundle resultData) {
     		byte[] image =
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
-    		if (image == null)
-        		handleMiss();
-    		else
-    			mImageViewNext.onNetworkHit(image);
-    	}
+            if (image == null) {
+                handleMiss();
+            }
+            else {
+                mImageViewNext.onNetworkHit(image);
+            }
+        }
 
     	@Override
     	public void onRequestConnectionError(Request request, int statusCode) {
@@ -514,9 +597,46 @@ public class ImageViewNext extends ImageViewEx {
     		// Calls the class callback
     		mImageViewNext.onNetworkMiss();
     		// Calss the final miss class callback
-    		// Starts searching in the disk cache
     		mImageViewNext.onMiss();
     	}
+    }
 
+    /** A simple interface for image loading callbacks. */
+    public interface ImageLoadCompletionListener {
+
+        /**
+         * Loading of a resource has been started by invoking {@link #setUrl(String)}.
+         *
+         * @param v     The ImageViewNext on which the loading has begun
+         * @param level The cache level involved. You will receive a pair of calls, one
+         *              to onLoadStarted and one to onLoadCompleted or to onLoadError,
+         *              for each cache level, in this order: memory->disk->network
+         *              (for MISS on both memory and disk caches)
+         */
+        public void onLoadStarted(ImageViewNext v, CacheLevel level);
+
+        /**
+         * Loading of a resource has been completed. This corresponds to a cache HIT
+         * for the memory and disk cache levels, or a successful download from the net.
+         *
+         * @param v     The ImageViewNext on which the loading has completed
+         * @param level The cache level involved. You will receive a pair of calls, one
+         *              to onLoadStarted and one to onLoadCompleted or to onLoadError,
+         *              for each cache level, in this order: memory->disk->network
+         *              (for MISS on both memory and disk caches).
+         */
+        public void onLoadCompleted(ImageViewNext v, CacheLevel level);
+
+        /**
+         * Loading of a resource has failed. This corresponds to a cache MISS
+         * for the memory and disk cache levels, or a successful download from the net.
+         *
+         * @param v     The ImageViewNext on which the loading has begun
+         * @param level The cache level involved. You will receive a pair of calls, one
+         *              to onLoadStarted and one to onLoadCompleted or to onLoadError,
+         *              for each cache level, in this order: memory->disk->network
+         *              (for MISS on both memory and disk caches)
+         */
+        public void onLoadError(ImageViewNext v, CacheLevel level);
     }
 }
