@@ -192,7 +192,7 @@ If you use this library, letting us know would make us proud. We do not ask for 
 
 ## Version history
 
-### 2.0.1-alpha
+### 2.0.0-alpha2
  * Speed improvements.
  * Moved assets to the test project.
 
