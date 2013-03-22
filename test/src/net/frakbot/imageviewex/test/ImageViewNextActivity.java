@@ -41,15 +41,15 @@ public class ImageViewNextActivity extends Activity {
         // Sets the class density to HDPI
         // ImageViewNext.setClassLevelDensity(DisplayMetrics.DENSITY_HIGH);
         // Sets the first image density to medium (bigger than the others)
-        // img1.setDensity(DisplayMetrics.DENSITY_MEDIUM);
+        img1.setDensity(DisplayMetrics.DENSITY_LOW);
         
         // Sets the sources of ImageViewNexts from URL
         img1.setUrl("http://img.italiansubs.net/news2/data/Lost/Stagione%202/Lost.s02e04-05-06.gif");
-        img2.setUrl("http://img.italiansubs.net/news2/data/The%20Simpsons/Stagione%2023/the.simpsons.s23e22.gif_for_ERROR");
+        img2.setUrl("http://img.italiansubs.net/news2/data/The%20Simpsons/Stagione%2023/the.simpsons.s23e22.gif");
         img3.setUrl("http://img.italiansubs.net/news2/data/Game%20of%20Thrones/Stagione%202/Game.of.Thrones.S02E08.gif");
         img4.setUrl("http://www.italiansubs.net/forum/Smileys/default/suicidiosenzafronzoli.gif");
         img5.setUrl("http://img.italiansubs.net/news2/data/Lost/Stagione%202/Lost.s02e04-05-06.gif");
 
-        img1.setImageAlign(ImageAlign.TOP);
+        // img1.setImageAlign(ImageAlign.TOP);
     }
 }
