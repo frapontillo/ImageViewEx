@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.util.LruCache;
 import android.util.AttributeSet;
+import android.util.Log;
 import com.foxykeep.datadroid.requestmanager.Request;
 import com.foxykeep.datadroid.requestmanager.RequestManager.RequestListener;
 import com.jakewharton.DiskLruCache;
@@ -26,6 +27,7 @@ import java.io.IOException;
 @SuppressWarnings("UnusedDeclaration")
 public class ImageViewNext extends ImageViewEx {
 
+    private static final String TAG = ImageViewNext.class.getSimpleName();
     private static final int DISK_CACHE_VALUE_COUNT = 1;
 
     private Drawable mLoadingD;
@@ -285,6 +287,7 @@ public class ImageViewNext extends ImageViewEx {
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     private void getFromMemCache(String url) {
+        if (BuildConfig.DEBUG) Log.i(TAG, "Memcache: getting for URL " + url + " @" + hashCode());
     	Request mRequest =
 				ImageViewExRequestFactory.getImageMemCacheRequest(url);
 		mCurrentRequestListener = new ImageMemCacheListener(this);
@@ -300,6 +303,7 @@ public class ImageViewNext extends ImageViewEx {
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     private void getFromDiskCache(String url) {
+        if (BuildConfig.DEBUG) Log.i(TAG, "Diskcache: getting for URL " + url + " @" + hashCode());
     	Request mRequest =
 				ImageViewExRequestFactory.getImageDiskCacheRequest(url);
 		mCurrentRequestListener = new ImageDiskCacheListener(this);
@@ -315,6 +319,7 @@ public class ImageViewNext extends ImageViewEx {
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     private void getFromNetwork(String url) {
+        if (BuildConfig.DEBUG) Log.i(TAG, "Network: getting for URL " + url + " @" + hashCode());
     	Request mRequest =
 				ImageViewExRequestFactory.getImageDownloaderRequest(url);
 		mCurrentRequestListener = new ImageDownloadListener(this);
@@ -340,7 +345,8 @@ public class ImageViewNext extends ImageViewEx {
      * @param image The image as a byte array.
      */
     protected void onMemCacheHit(byte[] image) {
-    	onSuccess(image);
+    	if (BuildConfig.DEBUG) Log.i(TAG, "Memory cache HIT @" + hashCode());
+        onSuccess(image);
 
         if (mLoadCallbacks != null) {
             mLoadCallbacks.onLoadCompleted(this, CacheLevel.MEMORY);
@@ -377,6 +383,7 @@ public class ImageViewNext extends ImageViewEx {
      * @param image The image as a byte array.
      */
     protected void onDiskCacheHit(byte[] image) {
+        if (BuildConfig.DEBUG) Log.i(TAG, "Disk cache HIT @" + hashCode());
     	onSuccess(image);
 
         if (mLoadCallbacks != null) {
@@ -400,6 +407,7 @@ public class ImageViewNext extends ImageViewEx {
      * @param image The image as a byte array.
      */
     protected void onNetworkHit(byte[] image) {
+        if (BuildConfig.DEBUG) Log.i(TAG, "Network HIT @" + hashCode());
     	onSuccess(image);
 
         if (mLoadCallbacks != null) {

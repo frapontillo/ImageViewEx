@@ -1036,8 +1036,6 @@ public class ImageViewEx extends ImageView {
      * parsing of the image).
      */
     public void stopLoading() {
-        mSetDrawableRunnable.setDrawable(null);
-        mSetGifRunnable.setGif(null);
         mHandler.removeCallbacks(mSetDrawableRunnable);
         mHandler.removeCallbacks(mSetGifRunnable);
     }
