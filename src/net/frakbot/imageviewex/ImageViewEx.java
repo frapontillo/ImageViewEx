@@ -20,7 +20,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ImageView.ScaleType;
 
 import java.io.InputStream;
 
@@ -30,7 +29,7 @@ import java.io.InputStream;
  *
  * @author Sebastiano Poggi, Francesco Pontillo
  */
-@SuppressWarnings("UnusedDeclaration")
+@SuppressWarnings({"deprecation"})
 public class ImageViewEx extends ImageView {
 
     private static final String TAG = ImageViewEx.class.getSimpleName();
@@ -45,7 +44,7 @@ public class ImageViewEx extends ImageView {
     private static final int IMAGE_SOURCE_GIF = 2;
 
     @SuppressWarnings("unused")
-    private int mImageSource;
+	private int mImageSource;
 
     // Used by the fixed size optimizations
     private boolean mIsFixedSize = false;
@@ -732,15 +731,15 @@ public class ImageViewEx extends ImageView {
      */
     private float[] applyScaleType(Canvas canvas) {
     	// Get the current dimensions of the view and the gif
-        float vWidth = this.getWidth();
-        float vHeight = this.getHeight();
+        float vWidth = getWidth();
+        float vHeight = getHeight();
         float gWidth = mGif.width() * mScale;
         float gHeight = mGif.height() * mScale;
 
         // Disable the default scaling, it can mess things up
         if (mScaleType == null) {
         	mScaleType = getScaleType();
-        	this.setScaleType(ScaleType.MATRIX);
+            setScaleType(ScaleType.MATRIX);
         }
         
         float x = 0;
@@ -753,6 +752,7 @@ public class ImageViewEx extends ImageView {
         		x = (vWidth - gWidth) / 2 / mScale;
         		y = (vHeight - gHeight) / 2 / mScale;
         		break;
+
         	case CENTER_CROP:
         		/*
         		 * Scale the image uniformly (maintain the image's aspect ratio)
@@ -770,6 +770,7 @@ public class ImageViewEx extends ImageView {
         		y = (vHeight - gHeight * s) / 2 / (s * mScale);
         		canvas.scale(s, s);
         		break;
+
         	case CENTER_INSIDE:
         		/*
         		 * Scale the image uniformly (maintain the image's aspect ratio)
@@ -790,6 +791,7 @@ public class ImageViewEx extends ImageView {
         		y = (vHeight - gHeight * s) / 2 / (s * mScale);
         		canvas.scale(s, s);
         		break;
+
         	case FIT_CENTER:
         		/*
         		 * Compute a scale that will maintain the original src aspect ratio,
@@ -808,6 +810,7 @@ public class ImageViewEx extends ImageView {
         		y = (vHeight - gHeight * s) / 2 / (s * mScale);
         		canvas.scale(s, s);
         		break;
+
         	case FIT_START:
         		/*
         		 * Compute a scale that will maintain the original src aspect ratio,
@@ -826,6 +829,7 @@ public class ImageViewEx extends ImageView {
         		y = 0;
         		canvas.scale(s, s);
         		break;
+
         	case FIT_END:
         		/*
         		 * Compute a scale that will maintain the original src aspect ratio,
@@ -844,6 +848,7 @@ public class ImageViewEx extends ImageView {
         		y = (vHeight - gHeight * s) / mScale / s;
         		canvas.scale(s, s);
         		break;
+
         	case FIT_XY:
         		/*
         		 * Scale in X and Y independently, so that src matches dst exactly.
@@ -892,7 +897,6 @@ public class ImageViewEx extends ImageView {
      *
      * @return The width of the view, honoring constraints from measureSpec
      */
-    @SuppressWarnings("IfMayBeConditional")
     private int measureWidth(int measureSpec) {
         int result;
         int specMode = MeasureSpec.getMode(measureSpec);
@@ -932,7 +936,6 @@ public class ImageViewEx extends ImageView {
      *
      * @return The height of the view, honoring constraints from measureSpec
      */
-    @SuppressWarnings("IfMayBeConditional")
     private int measureHeight(int measureSpec) {
         int result;
         int specMode = MeasureSpec.getMode(measureSpec);
@@ -1031,10 +1034,10 @@ public class ImageViewEx extends ImageView {
      * parsing of the image).
      */
     public void stopLoading() {
-        mSetDrawableRunnable.setDrawable(null);
-        mSetGifRunnable.setGif(null);
-        mHandler.removeCallbacks(mSetDrawableRunnable);
-        mHandler.removeCallbacks(mSetGifRunnable);
+    	if (mHandler != null) {
+            mHandler.removeCallbacks(mSetDrawableRunnable);
+            mHandler.removeCallbacks(mSetGifRunnable);
+    	}
     }
 
 

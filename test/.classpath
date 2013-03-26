@@ -5,7 +5,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/ImageViewEx"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/DataDroid"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DataDroid"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/DiskLruCache"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

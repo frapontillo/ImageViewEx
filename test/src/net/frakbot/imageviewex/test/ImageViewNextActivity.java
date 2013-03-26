@@ -18,6 +18,11 @@ public class ImageViewNextActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Set A LOT of maximum concurrent threads:
+        // this is an exaggeration, please don't do this! :D
+        ImageViewNext.setMaximumNumberOfThreads(100);
+        
         setContentView(R.layout.next);
            
         // Displays some stats about density

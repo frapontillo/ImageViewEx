@@ -1,20 +1,15 @@
 package net.frakbot.cache;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Locale;
-
-import com.jakewharton.DiskLruCache.Editor;
-
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
+import com.jakewharton.DiskLruCache.Editor;
+
+import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
 
 public class CacheHelper {
 	
@@ -32,10 +27,7 @@ public class CacheHelper {
 	
 	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 	public static boolean isExternalStorageRemovable() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            return Environment.isExternalStorageRemovable();
-        }
-        return true;
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD || Environment.isExternalStorageRemovable();
     }
 
     public static File getExternalCacheDir(Context context) {
@@ -88,7 +80,7 @@ public class CacheHelper {
     														 UnsupportedEncodingException {
     	MessageDigest digest = MessageDigest.getInstance("SHA-256");
     	byte[] convBytes = digest.digest(uri.getBytes("UTF-8"));
-    	String result = null;
+    	String result;
     	StringBuilder sb = new StringBuilder();
     	for (byte b : convBytes) {
     	    sb.append(String.format("%02X", b));
