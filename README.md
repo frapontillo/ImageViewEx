@@ -200,6 +200,10 @@ If you use this library, letting us know would make us proud. We do not ask for 
 
 ## Version history
 
+### 2.0.0-alpha3
+ * Enabled setting of maximum number of concurrent threads.
+ * Minor fixes and improvements.
+
 ### 2.0.0-alpha2
  * Speed improvements.
  * Moved assets to the test project.
