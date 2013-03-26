@@ -24,7 +24,6 @@ import java.io.IOException;
  *
  * @author Francesco Pontillo, Sebastiano Poggi
  */
-@SuppressWarnings("UnusedDeclaration")
 public class ImageViewNext extends ImageViewEx {
 
     private static final String TAG = ImageViewNext.class.getSimpleName();
@@ -334,19 +333,34 @@ public class ImageViewNext extends ImageViewEx {
      * Called when the image is got from whatever the source.
      * Override this to get the appropriate callback.
      * @param image The image as a byte array.
+     * @param url	The URL of the retrieved image.
      */
     protected void onSuccess(byte[] image) {
     	setByteArray(image);
     }
 
     /**
+     * Called when the image is got from whatever the source.
+     * Checks if the original URL matches the current one set
+     * in the instance of ImageViewNext.
+     * @param image The image as a byte array.
+     * @param url	The URL of the retrieved image.
+     */
+    private void onPreSuccess(byte[] image, String url) {
+    	// Only set the image if the current url equals to the retrieved image's url
+    	if (url != null && url.equals(getUrl()))
+    		onSuccess(image);
+    }
+
+    /**
      * Called when the image is got from the memory cache.
      * Override this to get the appropriate callback.
      * @param image The image as a byte array.
+     * @param url	The URL of the retrieved image.
      */
-    protected void onMemCacheHit(byte[] image) {
+    protected void onMemCacheHit(byte[] image, String url) {
     	if (BuildConfig.DEBUG) Log.i(TAG, "Memory cache HIT @" + hashCode());
-        onSuccess(image);
+        onPreSuccess(image, url);
 
         if (mLoadCallbacks != null) {
             mLoadCallbacks.onLoadCompleted(this, CacheLevel.MEMORY);
@@ -381,10 +395,11 @@ public class ImageViewNext extends ImageViewEx {
      * Called when the image is got from the disk cache.
      * Override this to get the appropriate callback.
      * @param image The image as a byte array.
+     * @param url	The URL of the retrieved image.
      */
-    protected void onDiskCacheHit(byte[] image) {
+    protected void onDiskCacheHit(byte[] image, String url) {
         if (BuildConfig.DEBUG) Log.i(TAG, "Disk cache HIT @" + hashCode());
-    	onSuccess(image);
+        onPreSuccess(image, url);
 
         if (mLoadCallbacks != null) {
             mLoadCallbacks.onLoadCompleted(this, CacheLevel.DISK);
@@ -405,10 +420,11 @@ public class ImageViewNext extends ImageViewEx {
      * Called when the image is got from the network.
      * Override this to get the appropriate callback.
      * @param image The image as a byte array.
+     * @param url	The URL of the retrieved image.
      */
-    protected void onNetworkHit(byte[] image) {
+    protected void onNetworkHit(byte[] image, String url) {
         if (BuildConfig.DEBUG) Log.i(TAG, "Network HIT @" + hashCode());
-    	onSuccess(image);
+        onPreSuccess(image, url);
 
         if (mLoadCallbacks != null) {
             mLoadCallbacks.onLoadCompleted(this, CacheLevel.NETWORK);
@@ -475,11 +491,13 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestFinished(Request request, Bundle resultData) {
     		byte[] image =
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
+    		String url = 
+    				resultData.getString(ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL);
             if (image == null) {
                 handleMiss();
             }
             else {
-                mImageViewNext.onMemCacheHit(image);
+                mImageViewNext.onMemCacheHit(image, url);
             }
         }
 
@@ -525,11 +543,13 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestFinished(Request request, Bundle resultData) {
     		byte[] image =
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
+    		String url = 
+    				resultData.getString(ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL);
             if (image == null) {
                 handleMiss();
             }
             else {
-                mImageViewNext.onDiskCacheHit(image);
+                mImageViewNext.onDiskCacheHit(image, url);
             }
         }
 
@@ -575,11 +595,13 @@ public class ImageViewNext extends ImageViewEx {
     	public void onRequestFinished(Request request, Bundle resultData) {
     		byte[] image =
     				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
+    		String url = 
+    				resultData.getString(ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL);
             if (image == null) {
                 handleMiss();
             }
             else {
-                mImageViewNext.onNetworkHit(image);
+                mImageViewNext.onNetworkHit(image, url);
             }
         }
 

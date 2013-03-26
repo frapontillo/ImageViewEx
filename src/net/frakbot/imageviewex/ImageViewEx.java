@@ -29,7 +29,7 @@ import java.io.InputStream;
  *
  * @author Sebastiano Poggi, Francesco Pontillo
  */
-@SuppressWarnings({"UnusedDeclaration", "deprecation"})
+@SuppressWarnings({"deprecation"})
 public class ImageViewEx extends ImageView {
 
     private static final String TAG = ImageViewEx.class.getSimpleName();
@@ -43,7 +43,8 @@ public class ImageViewEx extends ImageView {
     private static final int IMAGE_SOURCE_BITMAP = 2;
     private static final int IMAGE_SOURCE_GIF = 2;
 
-    private int mImageSource;
+    @SuppressWarnings("unused")
+	private int mImageSource;
 
     // Used by the fixed size optimizations
     private boolean mIsFixedSize = false;
@@ -728,7 +729,6 @@ public class ImageViewEx extends ImageView {
      * 						- 1 The y position of the gif
      * 						- 2 The scaling applied to the y-axis
      */
-    @SuppressWarnings("IfMayBeConditional")
     private float[] applyScaleType(Canvas canvas) {
     	// Get the current dimensions of the view and the gif
         float vWidth = getWidth();
@@ -897,7 +897,6 @@ public class ImageViewEx extends ImageView {
      *
      * @return The width of the view, honoring constraints from measureSpec
      */
-    @SuppressWarnings("IfMayBeConditional")
     private int measureWidth(int measureSpec) {
         int result;
         int specMode = MeasureSpec.getMode(measureSpec);
@@ -937,7 +936,6 @@ public class ImageViewEx extends ImageView {
      *
      * @return The height of the view, honoring constraints from measureSpec
      */
-    @SuppressWarnings("IfMayBeConditional")
     private int measureHeight(int measureSpec) {
         int result;
         int specMode = MeasureSpec.getMode(measureSpec);
@@ -1036,8 +1034,10 @@ public class ImageViewEx extends ImageView {
      * parsing of the image).
      */
     public void stopLoading() {
-        mHandler.removeCallbacks(mSetDrawableRunnable);
-        mHandler.removeCallbacks(mSetGifRunnable);
+    	if (mHandler != null) {
+            mHandler.removeCallbacks(mSetDrawableRunnable);
+            mHandler.removeCallbacks(mSetGifRunnable);
+    	}
     }
 
 

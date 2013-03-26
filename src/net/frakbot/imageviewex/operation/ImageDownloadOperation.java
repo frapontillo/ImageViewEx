@@ -24,6 +24,7 @@ import com.jakewharton.DiskLruCache.Editor;
  * - ImageMemCacheOperation.PARAM_IMAGE_URL, the URL of the image
  * Given output:
  * - ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT, the byte array of the image
+ * - ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL, the requested URL of the image
  * 
  * @author Francesco Pontillo
  *
@@ -75,6 +76,7 @@ public class ImageDownloadOperation implements Operation {
 		
 		Bundle b = new Bundle();
 		b.putByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT, image);
+		b.putString(ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL, url);
 		return b;
 	}
 

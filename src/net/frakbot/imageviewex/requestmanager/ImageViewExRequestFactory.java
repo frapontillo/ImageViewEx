@@ -28,6 +28,8 @@ public final class ImageViewExRequestFactory {
     // Response data
     public static final String BUNDLE_EXTRA_OBJECT =
             "net.frakbot.imageviewex.extra.object";
+    public static final String BUNDLE_EXTRA_IMAGE_URL =
+            "net.frakbot.imageviewex.extra.imageUrl";
     
     private ImageViewExRequestFactory() {
         // no public constructor
