@@ -27,7 +27,7 @@ The Eclipse project included specifies this is a library project, although it pr
 
 For your application, you need to include the permissions specified in the AndroidManifest of the library, which are:
 
- * `android.permission.INTERNET for getting` images on the internet
+ * `android.permission.INTERNET` for getting images on the internet
  * `android.permission.ACCESS_NETWORK_STATE` to monitor the network state
  * `android.permission.WRITE_EXTERNAL_STORAGE` for making the cache access and write the SD card
  
@@ -59,7 +59,7 @@ Accessory methods are:
 ####Conditional animation
 As mentioned earlier, you may not want to animate some GIF under some conditions.
 
-So we've provided you with a **conditional method** that gets triggered just before each animation begins, `boolean canAnimate()`. This method should be overridden with your custom implementation. By default, it always returns `true`. This method decides whether animations can be started for this instance of `ImageViewEx`.
+So we've provided you with a **conditional method** that gets triggered just before each animation begins, `boolean canAnimate()`. This method should be overridden by your custom implementation. By default, it always returns `true`. This method decides whether animations can be started for this instance of `ImageViewEx`.
 
 If you don't want to have another class extending `ImageViewEx` and your `canAnimate()` returns the same value throughout your application, you can use the following
 
@@ -67,9 +67,9 @@ If you don't want to have another class extending `ImageViewEx` and your `canAni
 	ImageViewNext.setCanAlwaysAnimate(false);
 ```
 
-to specify you never want to animate GIFs. If you don't set any value to `setCanAlwaysAnimate`, it defaults to `true`. The actual result in setting the value to `false` is that it will stopping all animation, no matter what `canAnimate()` returns.
+to specify you never want to animate GIFs. If you don't set any value to `setCanAlwaysAnimate`, it defaults to `true`. The result you get by setting the value to `false` is that it will stop all animations, no matter what `canAnimate()` returns.
 
-You can check the behavior by calling the `static boolean getCanAlwaysAnimate()` method.
+You can check the current behavior by calling the `static boolean getCanAlwaysAnimate()` method.
 
 ####Density Level
 You can set a **specific density to simulate** for every instance of `ImageViewEx` by using the following methods:
@@ -166,6 +166,14 @@ You should not worry about setting images, as this is handled by `ImageViewNext`
 
 If you override `ImageViewNext`, always call the default implementation of these methods.
 
+####Maximum number of threads
+
+You can set the maximum number of concurrent threads; threads are used to retrieve an image, given its URL, from the memory cache, the disk cache or the network.
+
+Use `ImageViewNext.setMaximumNumberOfThreads(THREAD_NUMBER)` BEFORE any `ImageViewNext` object is instantiated (ideally, in your `Application` class), as calling this function again after an `ImageViewNext` has been instantiated will have no effect.
+
+You can retrieve the maximum number of concurrent threads with `ImageViewNext.getMaximumNumberOfThreads()`.
+
 ####Example of use
 
 ```java
@@ -181,7 +189,7 @@ If you override `ImageViewNext`, always call the default implementation of these
 
 `ImageViewEx`internally uses an old Android Framework class, `Movie`, to parse animated GIFs. This ensures fast execution, since the `Movie` class internally relies on native code. Due to `Movie` being a legacy class, though, there are a few quirks.
 
-Firstly, you can't have `Movie` working on an hardware-accelerated canvas in Honeycomb and newer versions of Android. The `ImageViewEx` thus automatically disables hardware acceleration on itself when it has to display a GIF image. One side effect is that hardware acceleration is "lost" forever on the View once turned off, so if you reuse the `ImageViewEx` and at some point you assign a GIF image to it, from that point onwards it won't be hardware accelerated anymore. That's a limitation Android itself imposes, so there's not much we can do about that. On the bright side, this only affects cases where hardware acceleration is available; even when software rendering is active, there's not a big performance hit thou.
+Firstly, you can't have `Movie` working on an hardware-accelerated canvas in Honeycomb and newer versions of Android. The `ImageViewEx` thus automatically disables hardware acceleration by itself when it has to display a GIF image. One side effect is that hardware acceleration is "lost" forever on the View once turned off, so if you reuse the `ImageViewEx` and at some point you assign a GIF image to it, from that point onwards it won't be hardware accelerated anymore. That's a limitation Android itself imposes, so there's not much we can do about that. On the bright side, this only affects cases where hardware acceleration is available; even when software rendering is active, there's not a big performance hit thou.
 
 The second issue is that `Movie` has serious issues on some emulator instances and some retail devices. This is most likely due to some broken code down at native (maybe in Skia) or video driver level. So not much we can do on this one either. On the bright side, we've provided a workaround, that is setting `setCanAlwaysAnimate(false)` on phones known to cause issues. You will lose animation support, but you don't need to get crazy trying to handle several layouts, some using `ImageView`s and some using `ImageViewEx`es.
 

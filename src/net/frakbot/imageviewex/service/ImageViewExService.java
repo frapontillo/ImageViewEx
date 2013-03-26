@@ -8,6 +8,7 @@
 
 package net.frakbot.imageviewex.service;
 
+import net.frakbot.imageviewex.ImageViewNext;
 import net.frakbot.imageviewex.operation.ImageDiskCacheOperation;
 import net.frakbot.imageviewex.operation.ImageDownloadOperation;
 import net.frakbot.imageviewex.operation.ImageMemCacheOperation;
@@ -25,9 +26,10 @@ import com.foxykeep.datadroid.service.RequestService;
  * @author Foxykeep, Francesco Pontillo
  */
 public class ImageViewExService extends RequestService {
+	
 	@Override
     protected int getMaximumNumberOfThreads() {
-        return 10;
+        return ImageViewNext.getMaximumNumberOfThreads();
     }
 
     @Override
