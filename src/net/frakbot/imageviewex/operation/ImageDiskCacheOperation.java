@@ -13,8 +13,8 @@ import com.foxykeep.datadroid.exception.CustomRequestException;
 import com.foxykeep.datadroid.exception.DataException;
 import com.foxykeep.datadroid.requestmanager.Request;
 import com.foxykeep.datadroid.service.RequestService.Operation;
-import com.jakewharton.DiskLruCache;
-import com.jakewharton.DiskLruCache.Snapshot;
+import com.jakewharton.disklrucache.DiskLruCache;
+import com.jakewharton.disklrucache.DiskLruCache.Snapshot;
 
 /**
  * Operation to search for an image in the disk cache.
