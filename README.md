@@ -200,6 +200,9 @@ If you use this library, letting us know would make us proud. We do not ask for 
 
 ## Version history
 
+### 2.1.0-alpha1
+ * Updated `DiskLruCache` to 2.0.0.
+
 ### 2.0.0-alpha3
  * Enabled setting of maximum number of concurrent threads.
  * Minor fixes and improvements.
@@ -209,7 +212,7 @@ If you use this library, letting us know would make us proud. We do not ask for 
  * Moved assets to the test project.
 
 ### 2.0.0-alpha
- * Caching/async system completelly rewrited.
+ * Caching/async system completely rewritten.
  * Several performance optimization.
  * Few bugs fixed.
 
