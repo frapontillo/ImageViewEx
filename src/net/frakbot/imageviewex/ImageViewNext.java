@@ -35,20 +35,19 @@ public class ImageViewNext extends ImageViewEx {
     private static int mClassErrorResId;
 
     private String mUrl;
+    private ImageLoadCompletionListener mLoadCallbacks;
+    
     protected ImageViewExRequestManager mRequestManager;
     protected Request mCurrentRequest;
-
     protected RequestListener mCurrentRequestListener;
+    
     private static int mMemCacheSize = 10 * 1024 * 1024; // 10MiB
-
 	private static LruCache<String, byte[]> mMemCache;
     private static int mAppVersion = 1;
     private static int mDiskCacheSize = 50 * 1024 * 1024; // 50MiB
 	private static DiskLruCache mDiskCache;
-
 	private static boolean mCacheInit = false;
-
-    private ImageLoadCompletionListener mLoadCallbacks;
+	private static int mConcurrentThreads = 10;
 
     /**
      * Represents a cache level.
@@ -475,6 +474,32 @@ public class ImageViewNext extends ImageViewEx {
             setSource(image);
         }
     }
+    
+    /**
+     * Returns the maximum number of concurrent worker threads
+     * used to get images from cache/network.
+     * 
+     * @return Maximum number of concurrent threads.
+     */
+    public static int getMaximumNumberOfThreads() {
+    	return mConcurrentThreads;
+    }
+    
+    /**
+     * Define the maximum number of concurrent worker threads
+     * used to get images from cache/network.
+     * By default only 10 concurrent worker threads are used at
+     * the same time.
+     * The value will be set once and for all when the first
+     * ImageViewNext is instantiated. Calling this function again
+     * after an ImageViewNext is instantiated will have no effect.
+     * 
+     * @param concurrentThreads The number of concurrent threads.
+     */
+    public static void setMaximumNumberOfThreads(int concurrentThreads) {
+    	mConcurrentThreads = concurrentThreads;
+    }
+    
 
     /**
      * Operation listener for the memory cache retrieval operation.
