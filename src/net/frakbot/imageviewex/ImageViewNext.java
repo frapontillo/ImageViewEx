@@ -9,7 +9,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import com.foxykeep.datadroid.requestmanager.Request;
 import com.foxykeep.datadroid.requestmanager.RequestManager.RequestListener;
-import com.jakewharton.DiskLruCache;
+import com.jakewharton.disklrucache.DiskLruCache;
 import net.frakbot.cache.CacheHelper;
 import net.frakbot.imageviewex.listener.ImageViewExRequestListener;
 import net.frakbot.imageviewex.requestmanager.ImageViewExRequestFactory;
