@@ -15,8 +15,8 @@ import com.foxykeep.datadroid.exception.CustomRequestException;
 import com.foxykeep.datadroid.exception.DataException;
 import com.foxykeep.datadroid.requestmanager.Request;
 import com.foxykeep.datadroid.service.RequestService.Operation;
-import com.jakewharton.DiskLruCache;
-import com.jakewharton.DiskLruCache.Editor;
+import com.jakewharton.disklrucache.DiskLruCache;
+import com.jakewharton.disklrucache.DiskLruCache.Editor;
 
 /**
  * Operation to download an image from the network.

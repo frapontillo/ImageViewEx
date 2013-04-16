@@ -4,7 +4,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
-import com.jakewharton.DiskLruCache.Editor;
+import com.jakewharton.disklrucache.DiskLruCache.Editor;
 
 import java.io.*;
 import java.security.MessageDigest;
