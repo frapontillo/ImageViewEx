@@ -377,13 +377,13 @@ public class ImageViewEx extends ImageView {
 
     @Override
     public void setBackgroundColor(int color) {
-        super.setBackgroundColor(color);
+        //super.setBackgroundColor(color);
         mEmptyDrawable = new ColorDrawable(color);
     }
 
     @Override
     public void setBackgroundResource(int resid) {
-        super.setBackgroundResource(resid);
+        //super.setBackgroundResource(resid);
         mEmptyDrawable = getBackground();
 
         if (mEmptyDrawable == null) {
@@ -393,7 +393,7 @@ public class ImageViewEx extends ImageView {
 
     @Override
     public void setBackgroundDrawable(Drawable d) {
-        super.setBackgroundDrawable(d);
+        //super.setBackgroundDrawable(d);
 
         mEmptyDrawable = d != null ?
                          d :

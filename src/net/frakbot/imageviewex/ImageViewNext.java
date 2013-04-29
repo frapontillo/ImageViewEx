@@ -24,6 +24,7 @@ import java.io.IOException;
  *
  * @author Francesco Pontillo, Sebastiano Poggi
  */
+@SuppressWarnings("UnusedDeclaration")
 public class ImageViewNext extends ImageViewEx {
 
     private static final String TAG = ImageViewNext.class.getSimpleName();
@@ -263,10 +264,11 @@ public class ImageViewNext extends ImageViewEx {
     		mRequestManager.removeRequestListener(mCurrentRequestListener);
     	}
 
-        setImageDrawable(mEmptyDrawable);    // This also stops any ongoing loading process
+        stop();
+        stopLoading();
 
         // Start the whole retrieval chain
-    	getFromMemCache(url);
+    	getFromMemCache(url);    // TODO: make memcache retrieval synchronous!
     }
 
     /**
@@ -332,7 +334,6 @@ public class ImageViewNext extends ImageViewEx {
      * Called when the image is got from whatever the source.
      * Override this to get the appropriate callback.
      * @param image The image as a byte array.
-     * @param url	The URL of the retrieved image.
      */
     protected void onSuccess(byte[] image) {
     	setByteArray(image);
@@ -383,6 +384,9 @@ public class ImageViewNext extends ImageViewEx {
             if (loadingDrawable instanceof AnimationDrawable) {
                 ((AnimationDrawable) loadingDrawable).start();
             }
+        }
+        else {
+            setImageDrawable(mEmptyDrawable);    // This also stops any ongoing loading process
         }
 
         if (mLoadCallbacks != null) {
