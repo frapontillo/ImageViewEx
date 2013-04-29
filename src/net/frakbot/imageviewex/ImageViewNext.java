@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v4.util.LruCache;
 import android.util.AttributeSet;
 import android.util.Log;
+
 import com.foxykeep.datadroid.requestmanager.Request;
 import com.foxykeep.datadroid.requestmanager.RequestManager.RequestListener;
 import com.jakewharton.disklrucache.DiskLruCache;
@@ -42,6 +43,8 @@ public class ImageViewNext extends ImageViewEx {
     protected Request mCurrentRequest;
     protected RequestListener mCurrentRequestListener;
     
+    private Context mContext;
+    
     private static int mMemCacheSize = 10 * 1024 * 1024; // 10MiB
 	private static LruCache<String, byte[]> mMemCache;
     private static int mAppVersion = 1;
@@ -65,6 +68,7 @@ public class ImageViewNext extends ImageViewEx {
 	/** {@inheritDoc} */
     public ImageViewNext(Context context) {
         super(context);
+        mContext = context;
         mRequestManager = ImageViewExRequestManager.from(context);
     }
 
@@ -76,6 +80,7 @@ public class ImageViewNext extends ImageViewEx {
      */
     public ImageViewNext(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mContext = context;
         mRequestManager = ImageViewExRequestManager.from(context);
     }
 
@@ -268,7 +273,7 @@ public class ImageViewNext extends ImageViewEx {
         stopLoading();
 
         // Start the whole retrieval chain
-    	getFromMemCache(url);    // TODO: make memcache retrieval synchronous!
+    	getFromMemCache(url);
     }
 
     /**
@@ -288,15 +293,36 @@ public class ImageViewNext extends ImageViewEx {
      */
     private void getFromMemCache(String url) {
         if (BuildConfig.DEBUG) Log.i(TAG, "Memcache: getting for URL " + url + " @" + hashCode());
-    	Request mRequest =
-				ImageViewExRequestFactory.getImageMemCacheRequest(url);
-		mCurrentRequestListener = new ImageMemCacheListener(this);
-		mRequestManager.execute(mRequest, mCurrentRequestListener);
 
         if (mLoadCallbacks != null) {
             mLoadCallbacks.onLoadStarted(this, CacheLevel.MEMORY);
         }
+        
+    	// Get the URL from the input Bundle
+ 		if (url == null || url.equals("")) return;
+ 		
+ 		// Initializes the caches, if they're not initialized already
+ 		ImageViewNext.initCaches(mContext);
+ 		
+ 		LruCache<String, byte[]> cache = ImageViewNext.getMemCache();
+ 		byte[] image = cache.get(url);
+ 		
+ 		if (image == null) {
+ 			handleMemCacheMiss();
+        } else {
+            this.onMemCacheHit(image, url);
+        }
     }
+    
+	/**
+	 * Generic function to handle the mem cache miss.
+	 */
+	private void handleMemCacheMiss() {
+		// Calls the class callback
+		this.onMemCacheMiss();
+		// Starts searching in the disk cache
+		getFromDiskCache(this.getUrl());
+	}
 
     /**
      * Tries to get the image from the disk cache.
@@ -502,59 +528,6 @@ public class ImageViewNext extends ImageViewEx {
      */
     public static void setMaximumNumberOfThreads(int concurrentThreads) {
     	mConcurrentThreads = concurrentThreads;
-    }
-    
-
-    /**
-     * Operation listener for the memory cache retrieval operation.
-     * @author Francesco Pontillo
-     *
-     */
-    private class ImageMemCacheListener extends ImageViewExRequestListener {
-
-    	public ImageMemCacheListener(ImageViewNext imageViewNext) {
-    		super(imageViewNext);
-    	}
-
-    	@Override
-    	public void onRequestFinished(Request request, Bundle resultData) {
-    		byte[] image =
-    				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
-    		String url = 
-    				resultData.getString(ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL);
-            if (image == null) {
-                handleMiss();
-            }
-            else {
-                mImageViewNext.onMemCacheHit(image, url);
-            }
-        }
-
-    	@Override
-    	public void onRequestConnectionError(Request request, int statusCode) {
-    		handleMiss();
-    	}
-
-    	@Override
-    	public void onRequestDataError(Request request) {
-    		handleMiss();
-    	}
-
-    	@Override
-    	public void onRequestCustomError(Request request, Bundle resultData) {
-    		handleMiss();
-    	}
-
-    	/**
-    	 * Generic function to handle the cache miss.
-    	 */
-    	private void handleMiss() {
-    		// Calls the class callback
-    		mImageViewNext.onMemCacheMiss();
-    		// Starts searching in the disk cache
-    		getFromDiskCache(mImageViewNext.getUrl());
-    	}
-
     }
 
     /**

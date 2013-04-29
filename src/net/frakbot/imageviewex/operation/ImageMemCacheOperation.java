@@ -20,6 +20,7 @@ import com.foxykeep.datadroid.service.RequestService.Operation;
  * - ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT, the byte array of the image
  * - ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL, the requested URL of the image
  * 
+ * @deprecated Retrieving in an async way from the mem cache is slow.
  * @author Francesco Pontillo
  *
  */
