@@ -35,7 +35,7 @@ import java.lang.reflect.Method;
  *
  * @author Sebastiano Poggi, Francesco Pontillo
  */
-@SuppressWarnings({"deprecation", "UnusedDeclaration"})
+@SuppressWarnings({"deprecation"})
 public class ImageViewEx extends ImageView {
 
     private static final String TAG = ImageViewEx.class.getSimpleName();
@@ -135,6 +135,8 @@ public class ImageViewEx extends ImageView {
                 }
             }
         }
+        
+    	a.recycle();
     }
 
     /**
@@ -777,7 +779,6 @@ public class ImageViewEx extends ImageView {
      * 						- 1 The y position of the gif
      * 						- 2 The scaling applied to the y-axis
      */
-    @SuppressWarnings("IfMayBeConditional")
     private float[] applyScaleType(Canvas canvas) {
     	// Get the current dimensions of the view and the gif
         float vWidth = getWidth();
