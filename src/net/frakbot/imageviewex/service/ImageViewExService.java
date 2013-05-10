@@ -25,6 +25,7 @@ import com.foxykeep.datadroid.service.RequestService;
  *
  * @author Foxykeep, Francesco Pontillo
  */
+@SuppressWarnings("deprecation")
 public class ImageViewExService extends RequestService {
 	
 	@Override
@@ -32,7 +33,7 @@ public class ImageViewExService extends RequestService {
         return ImageViewNext.getMaximumNumberOfThreads();
     }
 
-    @Override
+	@Override
     public Operation getOperationForType(int requestType) {
         switch (requestType) {
             case ImageViewExRequestFactory.REQUEST_TYPE_IMAGE_MEM_CACHE:
