@@ -19,6 +19,7 @@ import com.foxykeep.datadroid.requestmanager.Request;
  *
  * @author Foxykeep, Francesco Pontillo
  */
+@SuppressWarnings("deprecation")
 public final class ImageViewExRequestFactory {
 	// Request types
     public static final int REQUEST_TYPE_IMAGE_MEM_CACHE = 0;

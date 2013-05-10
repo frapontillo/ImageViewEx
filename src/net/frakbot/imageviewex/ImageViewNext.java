@@ -1,6 +1,7 @@
 package net.frakbot.imageviewex;
 
 import android.content.Context;
+import android.content.IntentFilter;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import com.foxykeep.datadroid.requestmanager.Request;
 import com.foxykeep.datadroid.requestmanager.RequestManager.RequestListener;
 import com.jakewharton.disklrucache.DiskLruCache;
 import net.frakbot.cache.CacheHelper;
+import net.frakbot.imageviewex.broadcastreceiver.ConnectivityChangeBroadcastReceiver;
 import net.frakbot.imageviewex.listener.ImageViewExRequestListener;
 import net.frakbot.imageviewex.requestmanager.ImageViewExRequestFactory;
 import net.frakbot.imageviewex.requestmanager.ImageViewExRequestManager;
@@ -25,7 +27,6 @@ import java.io.IOException;
  *
  * @author Francesco Pontillo, Sebastiano Poggi
  */
-@SuppressWarnings("UnusedDeclaration")
 public class ImageViewNext extends ImageViewEx {
 
     private static final String TAG = ImageViewNext.class.getSimpleName();
@@ -35,6 +36,10 @@ public class ImageViewNext extends ImageViewEx {
     private static int mClassLoadingResId;
     private Drawable mErrorD;
     private static int mClassErrorResId;
+    
+    private boolean mAutoRetryFromNetwork;
+    private static boolean mClassAutoRetryFromNetwork;
+    private boolean hasFailedDownload;
 
     private String mUrl;
     private ImageLoadCompletionListener mLoadCallbacks;
@@ -52,7 +57,10 @@ public class ImageViewNext extends ImageViewEx {
 	private static DiskLruCache mDiskCache;
 	private static boolean mCacheInit = false;
 	private static int mConcurrentThreads = 10;
-
+	
+	private ConnectivityChangeBroadcastReceiver mReceiver;
+	private static final String RECEIVER_ACTION = android.net.ConnectivityManager.CONNECTIVITY_ACTION;
+	
     /**
      * Represents a cache level.
      */
@@ -68,22 +76,75 @@ public class ImageViewNext extends ImageViewEx {
 	/** {@inheritDoc} */
     public ImageViewNext(Context context) {
         super(context);
-        mContext = context;
-        mRequestManager = ImageViewExRequestManager.from(context);
+        init(context);
     }
 
     /**
      * Creates an instance for the class.
+     * Initializes the auto retry from network to true.
      *
      * @param context The context to initialize the instance into.
      * @param attrs   The parameters to initialize the instance with.
      */
     public ImageViewNext(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init(context);
+    }
+    
+    /**
+     * Initializes a few instance level variables.
+     * @param context	The Context used for initialization.
+     */
+    private void init(Context context) {
         mContext = context;
         mRequestManager = ImageViewExRequestManager.from(context);
+        mClassAutoRetryFromNetwork = true;
+        mAutoRetryFromNetwork = true;
+        hasFailedDownload = false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void onAttachedToWindow() {
+    	super.onAttachedToWindow();
+    	registerReceiver();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void onDetachedFromWindow() {
+    	super.onDetachedFromWindow();
+    	unregisterReceiver();
+    }
+    
+    /**
+     * Register the {@link ConnectivityChangeBroadcastReceiver} for this instance.
+     */
+    private void registerReceiver() {
+    	// If the receiver does not exist
+    	if (mReceiver == null) {
+    		mReceiver = new ConnectivityChangeBroadcastReceiver(this);
+    		final IntentFilter intentFilter = new IntentFilter();
+    		intentFilter.addAction(RECEIVER_ACTION);
+    		mContext.registerReceiver(mReceiver, intentFilter);
+    	}
+    }
+    
+    /**
+     * Unregister the {@link ConnectivityChangeBroadcastReceiver} for this instance.
+     */
+    private void unregisterReceiver() {
+    	// If the receiver does exists
+    	if (mReceiver != null) {
+        	mContext.unregisterReceiver(mReceiver);
+        	mReceiver = null;
+    	}
+    }
+    
     /** Gets the current image loading callback, if any */
     public ImageLoadCompletionListener getLoadCallbacks() {
         return mLoadCallbacks;
@@ -257,6 +318,28 @@ public class ImageViewNext extends ImageViewEx {
     }
 
     /**
+     * Checks if a request is already in progress.
+     * @return	true if there is a pending request, false otherwise.
+     */
+    private boolean isRequestInProgress() {
+    	return (mCurrentRequest != null
+				&& mRequestManager.isRequestInProgress(mCurrentRequest));
+    }
+    
+    /**
+     * Aborts the current request, if any, and stops everything else.
+     */
+    private void abortEverything() {
+    	// Abort the current request before starting another one
+		if (isRequestInProgress()) {
+			mRequestManager.removeRequestListener(mCurrentRequestListener);
+		}
+
+		stop();
+		stopLoading();
+    }
+    
+    /**
      * Sets the content of the {@link ImageViewNext} with the data to be downloaded
      * from the provided URL.
      *
@@ -264,14 +347,9 @@ public class ImageViewNext extends ImageViewEx {
      */
     public void setUrl(String url) {
     	mUrl = url;
-    	// Abort the current request before starting another one
-    	if (mCurrentRequest != null
-    		&& mRequestManager.isRequestInProgress(mCurrentRequest)) {
-    		mRequestManager.removeRequestListener(mCurrentRequestListener);
-    	}
-
-        stop();
-        stopLoading();
+    	
+    	// Abort the pending request (if any) and stop animating/loading
+    	abortEverything();
 
         // Start the whole retrieval chain
     	getFromMemCache(url);
@@ -287,8 +365,124 @@ public class ImageViewNext extends ImageViewEx {
     public String getUrl() {
     	return mUrl;
     }
+    
+    /**
+	 * Returns true if this instance will automatically retry the download from
+	 * the network when it becomes available once again.
+	 * The instance level settings has priority over the class level's.
+	 * 
+	 * @return true if the instance retries to download the image when the
+	 *         network is once again available, false otherwise.
+	 */
+    public boolean isAutoRetryFromNetwork() {
+		return mAutoRetryFromNetwork;
+	}
+    
+	/**
+	 * Sets the value of auto retry from network for this instance, set it to
+	 * true if this instance has to automatically retry the download from the
+	 * network when it becomes available once again, false otherwise. The
+	 * instance level settings has priority over the class level's.
+	 * 
+	 * If the instance was previously forbidden to auto-retry, it will be
+	 * allowed as soon as this method is called with a true argument.
+	 * 
+	 * If the instance was previously allowed to auto-retry, it will be
+	 * forbidden as soon as this method is called with a false argument.
+	 * 
+	 * @param autoRetryFromNetwork
+	 *            The instance value for the auto retry.
+	 */
+
+	public void setAutoRetryFromNetwork(boolean autoRetryFromNetwork) {
+		boolean registerAfter = false;
+		boolean unregisterAfter = false;
+		
+		// If nothing changes, do nothing
+		if (this.mAutoRetryFromNetwork == autoRetryFromNetwork) return;
+		
+		// Set the "after" booleans
+		registerAfter = (this.mAutoRetryFromNetwork == false);
+		unregisterAfter = (autoRetryFromNetwork == false);
+		
+		// Set the state value
+		this.mAutoRetryFromNetwork = autoRetryFromNetwork;
+		
+		// Register or unregister the receiver according to the new value
+		if (registerAfter) {
+			registerReceiver();
+		} else if (unregisterAfter) {
+			unregisterReceiver();
+		}
+	}
 
     /**
+	 * Returns true if every ImageViewNext will automatically retry the download from
+	 * the network when it becomes available once again.
+	 * 
+	 * @return true if ImageViewNext retries to download the image when the
+	 *         network is once again available, false otherwise.
+	 */
+
+	public static boolean isClassAutoRetryFromNetwork() {
+		return ImageViewNext.mClassAutoRetryFromNetwork;
+	}
+	
+	/**
+	 * Sets the value of auto retry from network for ImageViewNext, set it to true 
+	 * if ImageViewNext has to automatically retry the download from
+	 * the network when it becomes available once again, false otherwise.
+	 * 
+	 * All of the existing constructed instances won't be affected by this.
+	 * 
+	 * @param classAutoRetryFromNetwork	The instance value for the auto retry.
+	 */
+
+	public static void setClassAutoRetryFromNetwork(
+			boolean classAutoRetryFromNetwork) {
+		ImageViewNext.mClassAutoRetryFromNetwork = classAutoRetryFromNetwork;
+	}
+
+	
+	/**
+	 * Checks if the auto retry can be applied for the current instance.
+	 * 
+	 * @return true if this instance is allowed to auto retry network ops, false
+	 *         otherwise.
+	 */
+	private boolean isAutoRetryTrueSomewhere() {
+		return (isAutoRetryFromNetwork() ? true : isClassAutoRetryFromNetwork());
+	}
+	
+	/**
+	 * Tries to retrieve the image from network, if and only if:
+	 * <ul>
+	 * <li>No requests are pending for this instance.</li>
+	 * <li>A previous download failed.</li>
+	 * <li>The instance-level or class-level auto retry is set to true, with
+	 * this priority.</li>
+	 * </ul>
+	 */
+	public void retryFromNetworkIfPossible() {
+		// Only retry to get the image from the network:
+		// - if no requests are in progress
+		// - if the download previously failed
+		// - auto retry is set to true for the instance or the class (in order)
+		if (!isRequestInProgress() && hasFailedDownload && isAutoRetryTrueSomewhere()) {
+	        if (BuildConfig.DEBUG) Log.i(TAG, "Autoretry: true somewhere, retrying...");
+	        // Abort the pending request (if any) and stop animating/loading
+	    	abortEverything();
+	    	// Initalize caches
+	    	ImageViewNext.initCaches(mContext);
+	    	// Starts the retrieval from the network once again
+			getFromNetwork(getUrl());
+			// Cross ye fingers
+		} else {
+	        if (BuildConfig.DEBUG) Log.i(TAG, "Autoretry: false, sorry.");
+		}
+	}
+	
+	/**
      * Tries to get the image from the memory cache.
      * @param url The URL to download the image from. It can be an animated GIF.
      */
@@ -455,6 +649,7 @@ public class ImageViewNext extends ImageViewEx {
     protected void onNetworkHit(byte[] image, String url) {
         if (BuildConfig.DEBUG) Log.i(TAG, "Network HIT @" + hashCode());
         onPreSuccess(image, url);
+        hasFailedDownload = false;
 
         if (mLoadCallbacks != null) {
             mLoadCallbacks.onLoadCompleted(this, CacheLevel.NETWORK);
@@ -470,6 +665,7 @@ public class ImageViewNext extends ImageViewEx {
         if (mLoadCallbacks != null) {
             mLoadCallbacks.onLoadError(this, CacheLevel.NETWORK);
         }
+        hasFailedDownload = true;
     }
 
     /**
