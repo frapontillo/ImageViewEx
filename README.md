@@ -1,13 +1,14 @@
-ImageViewEx
-===========
+#ImageViewEx
+
+---
 
 Extension of Android's ImageView that supports animated GIFs and includes a better density management.
 
-###Author
+##Author
 
 **Francesco Pontillo** and **Sebastiano Poggi**
 
-###Description
+##Description
 
 The **ImageViewEx** is an extension of the standard Android `ImageView` that fills in one of the biggest gaps in the standard `ImageView`: displaying **animated GIFs**.
 
@@ -15,7 +16,32 @@ The Android Framework `Drawable` class, in fact, only supports static GIFs. This
 
 The `ImageViewEx` also allows you to specify what has to be considered the default image density when loading images from raw data. Android defaults to considering `mdpi` as the baseline, but using `setInDensity` you can choose to change it to whatever value you like (we suggest to stick to standard abstracted density buckets like `hdpi` thou).
 
+The following is a brief documentation of the classes, methods and views included in this library.
+
+##Index
+
+1. [Import and usage](#import)
+2. [ImageViewEx](#imageviewex)
+* [Animated GIF](#animated-gifs)
+* [Conditional animation](#conditional-animation)
+* [Density level](#density-level)
+* [Regular behavior](#regular-behavior)
+* [Example of use](#imageviewex-example)
+3. [ImageViewNext](#imageviewnext)
+* [Remote loading and caching of images](#remote-loading)
+* [Loading and Error Drawables](#loading-error-drawables)
+* [Getting images from the Internet](#getting-from-internet)
+* [Handling network failures](#network-failures)
+* [Maximum number of threads](#thread-number)
+* [Example of use](#imageviewnext-example)
+4. [Known issues and workarounds](#issues-workarounds)
+5. [Some boring stuff](#boring-stuff)
+6. [Version history](#history)
+7. [License](#license)
+
+<a name="import"/>
 ##Import and usage
+
 This library requires Android **API level 8** (Android 2.2) as minimum, and targets the Android **API level 17**.
 
 Starting from version 2.0.0, you need to include in your destination project:
@@ -30,14 +56,21 @@ For your application, you need to include the permissions specified in the Andro
  * `android.permission.INTERNET` for getting images on the internet
  * `android.permission.ACCESS_NETWORK_STATE` to monitor the network state
  * `android.permission.WRITE_EXTERNAL_STORAGE` for making the cache access and write the SD card
- 
-##Documentation
-This is a brief documentation of the classes, methods and views included in this library.
 
-###ImageViewEx
+The `ImageViewExService` service is also internally used by `ImageViewNext` for handling asynchronous operation. You need to declare this service in your `AndroidManifest.xml`:
+
+```xml
+	<service android:name="net.frakbot.imageviewex.service.ImageViewExService"/>
+```
+
+<a name="imageviewex"/>
+##ImageViewEx
+
 `ImageViewEx` is an extended `ImageView` that supports some additional methods for your every-day life.
 
-####Animated GIF
+<a name="animated-gifs"/>
+###Animated GIF
+
 The best thing about `ImageViewEx` is its **automatic handling of animated GIF images** starting from a simple `byte[]`.
 
 Simply call `img.setSource(mGIF)` and see your GIF animating. Note that there may be some issues under some conditions (see [Known issues and workarounds](#known-issues-and-workarounds)).
@@ -55,8 +88,10 @@ Accessory methods are:
  * `void play()` to start the GIF, if it hasn't started yet.
  * `void pause()` to pause the GIF, if it has started
  * `void stop()` to stop playing the GIF, if it has started
- 
-####Conditional animation
+
+<a name="conditional-animation"/>
+###Conditional animation
+
 As mentioned earlier, you may not want to animate some GIF under some conditions.
 
 So we've provided you with a **conditional method** that gets triggered just before each animation begins, `boolean canAnimate()`. This method should be overridden by your custom implementation. By default, it always returns `true`. This method decides whether animations can be started for this instance of `ImageViewEx`.
@@ -71,7 +106,9 @@ to specify you never want to animate GIFs. If you don't set any value to `setCan
 
 You can check the current behavior by calling the `static boolean getCanAlwaysAnimate()` method.
 
-####Density Level
+<a name="density-level"/>
+###Density Level
+
 You can set a **specific density to simulate** for every instance of `ImageViewEx` by using the following methods:
 
  * `static void setClassLevelDensity(int classLevelDensity)` to set a specific density for every image
@@ -84,16 +121,19 @@ You can even set a density for just one of your `ImageViewEx`s:
  * `void setDensity(int fixedDensity)`, to set the density for a particular instance of `ImageViewEx`
  * `int getDensity()`, gets the set density for a particular instance of `ImageViewEx` (an instance-level density has higher priority over a class-level density)
  * `void dontOverrideDensity()`, restores the regular density of the `ImageViewEx`
- 
-####Regular behavior
+
+<a name="regular-behavior"/>
+###Regular behavior
+
 `ImageViewEx` is, after all, a regular `ImageView`, so you can go ahead and use its regular methods:
 
  * `void setImageResource(int resId)`
  * `void setImageDrawable(Drawable drawable)`
  * `void setImageBitmap(Bitmap bm)`
  * and so on.
- 
-####Example of use
+
+<a name="imageviewex-example"/>
+###Example of use
 
 ```java
 	// Disables animation, behaving like a regular ImageView,
@@ -112,29 +152,16 @@ You can even set a density for just one of your `ImageViewEx`s:
     img2.setSource(Converters.assetToByteArray(getAssets(), "animated_image.gif"));
 ```
 
-###ImageViewExService
-The `ImageViewExService` service is internally used by `ImageViewNext` for handling asynchronous operation. You need to declare this service in your `AndroidManifest.xml`:
+<a name="imageviewnext"/>
+##ImageViewNext
 
-```xml
-	<service android:name="net.frakbot.imageviewex.service.ImageViewExService"/>
-```
-
-###ImageViewNext
 `ImageViewExService` is used by `ImageViewNext`, an extension of `ImageViewEx` that handles **downloading, displaying and caching of images (and animated GIFs, of course)**.
 
 `ImageViewNext` extends `ImageViewEx`, thus supporting all of its methods, plus some more.
 
-####Loading and Error Drawables
-`ImageViewNext` supports loading and error `Drawable`s:
+<a name="remote-loading"/>
+###Remote loading and caching of images
 
- * `static void setClassLoadingDrawable(int classLoadingDrawableResId)` sets a `Drawable` for every instance of `ImageViewNext` from the resources to be displayed (and animated, if it's an `AnimatedDrawable`) as soon as the caching tells us there's no in-memory reference for the asked resource. If you have enabled a disk cache, this `Drawable` will be set before fetching the disk memory.
- * `void setLoadingDrawable(Drawable loadingDrawable)` sets a `Drawable` for the current instance of `ImageViewNext` from the resources to be displayed (and animated, if it's an `AnimatedDrawable`) as soon as the caching tells us there's no in-memory reference for the asked resource. If you have enabled a disk cache, this `Drawable` will be set before fetching the disk memory.
- * `static void setClassErrorDrawable(int classErrorDrawableResId)` sets a `Drawable` for every instance of `ImageViewNext` from the resources to be displayed (and animated, if it's an `AnimatedDrawable`) as soon as the RemoteLoader returns an error, not being able to retrieve the image.
- * `void setErrorDrawable(Drawable errorDrawable)` sets a `Drawable` for the current instance of of `ImageViewNext` from the resources to be displayed (and animated, if it's an `AnimatedDrawable`) as soon as the RemoteLoader returns an error, not being able to retrieve the image.
- * `Drawable getLoadingDrawable()` returns the `Drawable` to be displayed while waiting for long-running operations.
- * `Drawable getErrorDrawable()` returns the `Drawable` to be displayed in case of an error.
-
-####Remote loading and caching of images
 `ImageViewNext` uses `ImageViewExService` and some DataDroid `Operation`s to retrieve images from a two-level cache and the internet and set them into your `ImageViewNext`.
  
 `ImageViewNext` takes care of instantiating the cache to some default values, which can be overridden/read by using the following `static` methods (pretty self-explanatory, read the JavaDoc for more information about them):
@@ -148,7 +175,21 @@ The `ImageViewExService` service is internally used by `ImageViewNext` for handl
  * `getDiskCacheSize()`
  * `setDiskCacheSize(int diskCacheSize)`
 
-####Getting images from the Internet
+<a name="loading-error-drawables"/>
+###Loading and Error Drawables
+
+`ImageViewNext` supports loading and error `Drawable`s:
+
+ * `static void setClassLoadingDrawable(int classLoadingDrawableResId)` sets a `Drawable` for every instance of `ImageViewNext` from the resources to be displayed (and animated, if it's an `AnimatedDrawable`) as soon as the caching tells us there's no in-memory reference for the asked resource. If you have enabled a disk cache, this `Drawable` will be set before fetching the disk memory.
+ * `void setLoadingDrawable(Drawable loadingDrawable)` sets a `Drawable` for the current instance of `ImageViewNext` from the resources to be displayed (and animated, if it's an `AnimatedDrawable`) as soon as the caching tells us there's no in-memory reference for the asked resource. If you have enabled a disk cache, this `Drawable` will be set before fetching the disk memory.
+ * `static void setClassErrorDrawable(int classErrorDrawableResId)` sets a `Drawable` for every instance of `ImageViewNext` from the resources to be displayed (and animated, if it's an `AnimatedDrawable`) as soon as the RemoteLoader returns an error, not being able to retrieve the image.
+ * `void setErrorDrawable(Drawable errorDrawable)` sets a `Drawable` for the current instance of of `ImageViewNext` from the resources to be displayed (and animated, if it's an `AnimatedDrawable`) as soon as the RemoteLoader returns an error, not being able to retrieve the image.
+ * `Drawable getLoadingDrawable()` returns the `Drawable` to be displayed while waiting for long-running operations.
+ * `Drawable getErrorDrawable()` returns the `Drawable` to be displayed in case of an error.
+
+<a name="getting-from-internet"/>
+###Getting images from the Internet
+
 In order to get images from the Internet, simply call `setUrl(String url)` to start retrieving an image from the internet or the caches.
 
 `ImageViewNext` can be overridden in order to do some custom operations in the following methods:
@@ -166,7 +207,25 @@ You should not worry about setting images, as this is handled by `ImageViewNext`
 
 If you override `ImageViewNext`, always call the default implementation of these methods.
 
-####Maximum number of threads
+<a name="network-failures"/>
+###Handling network failures
+
+By default, starting from version 2.2.0, each `ImageViewNext` will listen to network availability changes and automatically retry and get the image from the Internet, if and only if the same instance failed to do so in the previous attempt.
+
+If you want to override the default behavior you can use:
+
+* `setClassAutoRetryFromNetwork(boolean classAutoRetryFromNetwork)` to set a class-level behavior
+* `setAutoRetryFromNetwork(boolean autoRetryFromNetwork)` to set an instance-specific behavior
+
+To know what the current settings are in regards to auto retry, use:
+
+* `isClassAutoRetryFromNetwork()` to get the class-level setting
+* `isAutoRetryFromNetwork()` to retrieve the instance-specific setting
+
+**Remember**: the instance-specific setting has an higher priority than the class-level setting.
+
+<a name="thread-number"/>
+###Maximum number of threads
 
 You can set the maximum number of concurrent threads; threads are used to retrieve an image, given its URL, from the memory cache, the disk cache or the network.
 
@@ -174,7 +233,8 @@ Use `ImageViewNext.setMaximumNumberOfThreads(THREAD_NUMBER)` BEFORE any `ImageVi
 
 You can retrieve the maximum number of concurrent threads with `ImageViewNext.getMaximumNumberOfThreads()`.
 
-####Example of use
+<a name="imageviewnext-example"/>
+###Example of use
 
 ```java
 	// Sets class-level loading/error Drawables
@@ -185,7 +245,8 @@ You can retrieve the maximum number of concurrent threads with `ImageViewNext.ge
     img2.setUrl("http://upload.wikimedia.org/wikipedia/commons/4/49/Basilicata_Matera1_tango7174.jpg");
 ```
 
-###Known issues and workarounds
+<a name="issues-workarounds"/>
+##Known issues and workarounds
 
 `ImageViewEx`internally uses an old Android Framework class, `Movie`, to parse animated GIFs. This ensures fast execution, since the `Movie` class internally relies on native code. Due to `Movie` being a legacy class, though, there are a few quirks.
 
@@ -193,11 +254,13 @@ Firstly, you can't have `Movie` working on an hardware-accelerated canvas in Hon
 
 The second issue is that `Movie` has serious issues on some emulator instances and some retail devices. This is most likely due to some broken code down at native (maybe in Skia) or video driver level. So not much we can do on this one either. On the bright side, we've provided a workaround, that is setting `setCanAlwaysAnimate(false)` on phones known to cause issues. You will lose animation support, but you don't need to get crazy trying to handle several layouts, some using `ImageView`s and some using `ImageViewEx`es.
 
+<a name="boring-stuff"/>
 ##Some boring stuff
 If you like this project and want to make a contribution, feel free to make a pull request, submit a bug report or ask for anything. Any contribution is appreciated!
 
 If you use this library, letting us know would make us proud. We do not ask for anything else.
 
+<a name="history"/>
 ## Version history
 
 ### 2.1.0-alpha1
@@ -222,7 +285,10 @@ If you use this library, letting us know would make us proud. We do not ask for 
 ### 1.0.0
  * First release.
 
+<a name="license"/>
 ## License
+
+```
 Released under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
 
 Copyright (c) 2011-2013 Francesco Pontillo and Sebastiano Poggi
@@ -232,3 +298,4 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
