@@ -25,6 +25,7 @@ The following is a brief documentation of the classes, methods and views include
   * [Animated GIF](#animated-gifs)
   * [Conditional animation](#conditional-animation)
   * [Density level](#density-level)
+  * [Fill direction](#fillDirection)
   * [Regular behavior](#regular-behavior)
   * [Example of use](#imageviewex-example)
 3. [ImageViewNext](#imageviewnext)
@@ -121,6 +122,16 @@ You can even set a density for just one of your `ImageViewEx`s:
  * `void setDensity(int fixedDensity)`, to set the density for a particular instance of `ImageViewEx`
  * `int getDensity()`, gets the set density for a particular instance of `ImageViewEx` (an instance-level density has higher priority over a class-level density)
  * `void dontOverrideDensity()`, restores the regular density of the `ImageViewEx`
+
+<a name="fillDirection"/>
+###Fill direction
+The `ImageViewEx` has one unique feature: it allows you to decide which direction to fit the image on, and then resize
+the other dimension (this function implies `adjustViewBounds`) to show the scaled image. For example, you can use this
+to show a banner which fills the whole horizontal available space (the `ImageViewEx` has
+`android:layout_width="match_parent"` and  `android:layout_height="wrap_content"`, plus
+`android:adjustViewBounds="true"`).
+Setting `fillDirection="horizontal"` will prioritize filling the available horizontal space while keeping the image
+aspect ratio and expanding the `ImageViewEx` to fit the height.
 
 <a name="regular-behavior"/>
 ###Regular behavior

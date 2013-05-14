@@ -35,8 +35,8 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module" scope="PROVIDED" module-name="DataDroid-imgviewex" />
-    <orderEntry type="module" scope="PROVIDED" module-name="disklrucache-imgviewex" />
+    <orderEntry type="module" module-name="DataDroid-imgviewex" scope="PROVIDED" />
+    <orderEntry type="module" module-name="disklrucache-imgviewex" scope="PROVIDED" />
   </component>
 </module>
 
