@@ -22,18 +22,18 @@ The following is a brief documentation of the classes, methods and views include
 
 1. [Import and usage](#import)
 2. [ImageViewEx](#imageviewex)
-* [Animated GIF](#animated-gifs)
-* [Conditional animation](#conditional-animation)
-* [Density level](#density-level)
-* [Regular behavior](#regular-behavior)
-* [Example of use](#imageviewex-example)
+  * [Animated GIF](#animated-gifs)
+  * [Conditional animation](#conditional-animation)
+  * [Density level](#density-level)
+  * [Regular behavior](#regular-behavior)
+  * [Example of use](#imageviewex-example)
 3. [ImageViewNext](#imageviewnext)
-* [Remote loading and caching of images](#remote-loading)
-* [Loading and Error Drawables](#loading-error-drawables)
-* [Getting images from the Internet](#getting-from-internet)
-* [Handling network failures](#network-failures)
-* [Maximum number of threads](#thread-number)
-* [Example of use](#imageviewnext-example)
+  * [Remote loading and caching of images](#remote-loading)
+  * [Loading and Error Drawables](#loading-error-drawables)
+  * [Getting images from the Internet](#getting-from-internet)
+  * [Handling network failures](#network-failures)
+  * [Maximum number of threads](#thread-number)
+  * [Example of use](#imageviewnext-example)
 4. [Known issues and workarounds](#issues-workarounds)
 5. [Some boring stuff](#boring-stuff)
 6. [Version history](#history)
@@ -293,9 +293,21 @@ Released under the [MIT license](http://www.opensource.org/licenses/mit-license.
 
 Copyright (c) 2011-2013 Francesco Pontillo and Sebastiano Poggi
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 ```
