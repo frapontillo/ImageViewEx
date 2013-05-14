@@ -1023,35 +1023,28 @@ public class ImageViewEx extends ImageView {
             h = drawable.getIntrinsicHeight();
             if (w <= 0) w = 1;
             if (h <= 0) h = 1;
-
-            // We are supposed to adjust view bounds to match the aspect
-            // ratio of our drawable. See if that is possible.
-            if (mAdjustViewBounds) {
-                resizeWidth = widthSpecMode != MeasureSpec.EXACTLY && mFillDirection != FillDirection.HORIZONTAL;
-                resizeHeight = heightSpecMode != MeasureSpec.EXACTLY && mFillDirection != FillDirection.VERTICAL;
-
-                desiredAspect = (float) w / (float) h;
-            }
         }
         else if (mGif != null) {
             w = mGif.width();
             h = mGif.height();
             if (w <= 0) w = 1;
             if (h <= 0) h = 1;
+        }
+        else {
+            // If no drawable, its intrinsic size is 0.
+            w = 0;
+            h = 0;
+        }
 
-            // We are supposed to adjust view bounds to match the aspect
-            // ratio of our GIF. See if that is possible.
+        // We are supposed to adjust view bounds to match the aspect
+        // ratio of our drawable. See if that is possible.
+        if (w > 0 && h > 0) {
             if (mAdjustViewBounds) {
                 resizeWidth = widthSpecMode != MeasureSpec.EXACTLY && mFillDirection != FillDirection.HORIZONTAL;
                 resizeHeight = heightSpecMode != MeasureSpec.EXACTLY && mFillDirection != FillDirection.VERTICAL;
 
                 desiredAspect = (float) w / (float) h;
             }
-        }
-        else {
-            // If no drawable, its intrinsic size is 0.
-            w = 0;
-            h = 0;
         }
 
         int pleft = getPaddingLeft();
@@ -1237,6 +1230,17 @@ public class ImageViewEx extends ImageView {
             mHandler.removeCallbacks(mSetDrawableRunnable);
             mHandler.removeCallbacks(mSetGifRunnable);
         }
+    }
+
+    /**
+     * Temporarily shows the empty drawable (or empties
+     * the view if none is defined). Note that this does not
+     * follow all procedures {@link #setImageDrawable(android.graphics.drawable.Drawable)}
+     * follows and is only intended for temporary assignments such as in
+     * {@link ImageViewNext.ImageLoadCompletionListener#onLoadStarted(ImageViewNext, ImageViewNext.CacheLevel)}.
+     */
+    public void showEmptyDrawable() {
+        super.setImageDrawable(mEmptyDrawable);
     }
 
 

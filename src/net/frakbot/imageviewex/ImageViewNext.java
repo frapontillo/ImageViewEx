@@ -248,7 +248,6 @@ public class ImageViewNext extends ImageViewEx {
      */
     public void setLoadingDrawable(Drawable loadingDrawable) {
         mLoadingD = loadingDrawable;
-        mEmptyDrawable = loadingDrawable;
     }
 
     /**
