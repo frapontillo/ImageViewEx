@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.support.v4.util.LruCache;
 import android.util.AttributeSet;
 import android.util.Log;
-
 import com.foxykeep.datadroid.requestmanager.Request;
 import com.foxykeep.datadroid.requestmanager.RequestManager.RequestListener;
 import com.jakewharton.disklrucache.DiskLruCache;
@@ -36,34 +35,32 @@ public class ImageViewNext extends ImageViewEx {
     private static int mClassLoadingResId;
     private Drawable mErrorD;
     private static int mClassErrorResId;
-    
+
     private boolean mAutoRetryFromNetwork;
     private static boolean mClassAutoRetryFromNetwork;
     private boolean hasFailedDownload;
 
     private String mUrl;
     private ImageLoadCompletionListener mLoadCallbacks;
-    
+
     protected ImageViewExRequestManager mRequestManager;
     protected Request mCurrentRequest;
     protected RequestListener mCurrentRequestListener;
-    
+
     private Context mContext;
-    
+
     private static int mMemCacheSize = 10 * 1024 * 1024; // 10MiB
-	private static LruCache<String, byte[]> mMemCache;
+    private static LruCache<String, byte[]> mMemCache;
     private static int mAppVersion = 1;
     private static int mDiskCacheSize = 50 * 1024 * 1024; // 50MiB
-	private static DiskLruCache mDiskCache;
-	private static boolean mCacheInit = false;
-	private static int mConcurrentThreads = 10;
-	
-	private ConnectivityChangeBroadcastReceiver mReceiver;
-	private static final String RECEIVER_ACTION = android.net.ConnectivityManager.CONNECTIVITY_ACTION;
-	
-    /**
-     * Represents a cache level.
-     */
+    private static DiskLruCache mDiskCache;
+    private static boolean mCacheInit = false;
+    private static int mConcurrentThreads = 10;
+
+    private ConnectivityChangeBroadcastReceiver mReceiver;
+    private static final String RECEIVER_ACTION = android.net.ConnectivityManager.CONNECTIVITY_ACTION;
+
+    /** Represents a cache level. */
     public enum CacheLevel {
         /** The first level of cache: the memory cache */
         MEMORY,
@@ -73,7 +70,7 @@ public class ImageViewNext extends ImageViewEx {
         NETWORK
     }
 
-	/** {@inheritDoc} */
+    /** {@inheritDoc} */
     public ImageViewNext(Context context) {
         super(context);
         init(context);
@@ -90,10 +87,11 @@ public class ImageViewNext extends ImageViewEx {
         super(context, attrs);
         init(context);
     }
-    
+
     /**
      * Initializes a few instance level variables.
-     * @param context	The Context used for initialization.
+     *
+     * @param context The Context used for initialization.
      */
     private void init(Context context) {
         mContext = context;
@@ -103,48 +101,40 @@ public class ImageViewNext extends ImageViewEx {
         hasFailedDownload = false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void onAttachedToWindow() {
-    	super.onAttachedToWindow();
-    	registerReceiver();
+        super.onAttachedToWindow();
+        registerReceiver();
     }
-    
-    /**
-     * {@inheritDoc}
-     */
+
+    /** {@inheritDoc} */
     @Override
     protected void onDetachedFromWindow() {
-    	super.onDetachedFromWindow();
-    	unregisterReceiver();
+        super.onDetachedFromWindow();
+        unregisterReceiver();
     }
-    
-    /**
-     * Register the {@link ConnectivityChangeBroadcastReceiver} for this instance.
-     */
+
+    /** Register the {@link ConnectivityChangeBroadcastReceiver} for this instance. */
     private void registerReceiver() {
-    	// If the receiver does not exist
-    	if (mReceiver == null) {
-    		mReceiver = new ConnectivityChangeBroadcastReceiver(this);
-    		final IntentFilter intentFilter = new IntentFilter();
-    		intentFilter.addAction(RECEIVER_ACTION);
-    		mContext.registerReceiver(mReceiver, intentFilter);
-    	}
+        // If the receiver does not exist
+        if (mReceiver == null) {
+            mReceiver = new ConnectivityChangeBroadcastReceiver(this);
+            final IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(RECEIVER_ACTION);
+            mContext.registerReceiver(mReceiver, intentFilter);
+        }
     }
-    
-    /**
-     * Unregister the {@link ConnectivityChangeBroadcastReceiver} for this instance.
-     */
+
+    /** Unregister the {@link ConnectivityChangeBroadcastReceiver} for this instance. */
     private void unregisterReceiver() {
-    	// If the receiver does exists
-    	if (mReceiver != null) {
-        	mContext.unregisterReceiver(mReceiver);
-        	mReceiver = null;
-    	}
+        // If the receiver does exists
+        if (mReceiver != null) {
+            mContext.unregisterReceiver(mReceiver);
+            mReceiver = null;
+        }
     }
-    
+
     /** Gets the current image loading callback, if any */
     public ImageLoadCompletionListener getLoadCallbacks() {
         return mLoadCallbacks;
@@ -159,47 +149,35 @@ public class ImageViewNext extends ImageViewEx {
         mLoadCallbacks = loadCallbacks;
     }
 
-    /**
-	 * @return The in-memory cache.
-	 */
-	public static LruCache<String, byte[]> getMemCache() {
-		return mMemCache;
-	}
+    /** @return The in-memory cache. */
+    public static LruCache<String, byte[]> getMemCache() {
+        return mMemCache;
+    }
 
-	/**
-	 * @return The disk cache.
-	 */
-	public static DiskLruCache getDiskCache() {
-		return mDiskCache;
-	}
+    /** @return The disk cache. */
+    public static DiskLruCache getDiskCache() {
+        return mDiskCache;
+    }
 
-	/**
-	 * @return The in-memory cache size, in bits.
-	 */
-	public static int getMemCacheSize() {
-		return mMemCacheSize;
-	}
+    /** @return The in-memory cache size, in bits. */
+    public static int getMemCacheSize() {
+        return mMemCacheSize;
+    }
 
-	/**
-	 * @param memCacheSize The in-memory cache size to set, in bits.
-	 */
-	public static void setMemCacheSize(int memCacheSize) {
-		ImageViewNext.mMemCacheSize = memCacheSize;
-	}
+    /** @param memCacheSize The in-memory cache size to set, in bits. */
+    public static void setMemCacheSize(int memCacheSize) {
+        ImageViewNext.mMemCacheSize = memCacheSize;
+    }
 
-	/**
-	 * @return The version of the app.
-	 */
-	public static int getAppVersion() {
-		return mAppVersion;
-	}
+    /** @return The version of the app. */
+    public static int getAppVersion() {
+        return mAppVersion;
+    }
 
-	/**
-	 * @param appVersion The app version to set.
-	 */
-	public static void setAppVersion(int appVersion) {
-		ImageViewNext.mAppVersion = appVersion;
-	}
+    /** @param appVersion The app version to set. */
+    public static void setAppVersion(int appVersion) {
+        ImageViewNext.mAppVersion = appVersion;
+    }
 
     /**
      * Sets the image loading callbacks listener.
@@ -219,40 +197,38 @@ public class ImageViewNext extends ImageViewEx {
         return mLoadCallbacks;
     }
 
-	/**
-	 * @return The disk cache max size, in bits.
-	 */
-	public static int getDiskCacheSize() {
-		return mDiskCacheSize;
-	}
+    /** @return The disk cache max size, in bits. */
+    public static int getDiskCacheSize() {
+        return mDiskCacheSize;
+    }
 
-	/**
-	 * @param diskCacheSize The disk cache max size to set, in bits.
-	 */
-	public static void setDiskCacheSize(int diskCacheSize) {
-		ImageViewNext.mDiskCacheSize = diskCacheSize;
-	}
+    /** @param diskCacheSize The disk cache max size to set, in bits. */
+    public static void setDiskCacheSize(int diskCacheSize) {
+        ImageViewNext.mDiskCacheSize = diskCacheSize;
+    }
 
     /**
-	 * Initializes both the in-memory and the disk-cache
-	 * at class-level, if it hasn't been done already.
-	 * This method is idempotent.
-	 */
+     * Initializes both the in-memory and the disk-cache
+     * at class-level, if it hasn't been done already.
+     * This method is idempotent.
+     */
     public static void initCaches(Context context) {
-    	if (!mCacheInit) {
-	    	mMemCache = new LruCache<String, byte[]>(mMemCacheSize) {
-				protected int sizeOf(String key, byte[] value) {
-					return value.length;
-				}
-			};
-			File diskCacheDir =
-				CacheHelper.getDiskCacheDir(context, "imagecache");
-			try {
-				mDiskCache = DiskLruCache.open(
-					diskCacheDir, mAppVersion, DISK_CACHE_VALUE_COUNT, mDiskCacheSize);
-			} catch (IOException ignored) { }
-			mCacheInit = true;
-    	}
+        if (!mCacheInit) {
+            mMemCache = new LruCache<String, byte[]>(mMemCacheSize) {
+                protected int sizeOf(String key, byte[] value) {
+                    return value.length;
+                }
+            };
+            File diskCacheDir =
+                CacheHelper.getDiskCacheDir(context, "imagecache");
+            try {
+                mDiskCache = DiskLruCache.open(
+                    diskCacheDir, mAppVersion, DISK_CACHE_VALUE_COUNT, mDiskCacheSize);
+            }
+            catch (IOException ignored) {
+            }
+            mCacheInit = true;
+        }
     }
 
     /**
@@ -319,26 +295,25 @@ public class ImageViewNext extends ImageViewEx {
 
     /**
      * Checks if a request is already in progress.
-     * @return	true if there is a pending request, false otherwise.
+     *
+     * @return true if there is a pending request, false otherwise.
      */
     private boolean isRequestInProgress() {
-    	return (mCurrentRequest != null
-				&& mRequestManager.isRequestInProgress(mCurrentRequest));
+        return (mCurrentRequest != null
+                && mRequestManager.isRequestInProgress(mCurrentRequest));
     }
-    
-    /**
-     * Aborts the current request, if any, and stops everything else.
-     */
-    private void abortEverything() {
-    	// Abort the current request before starting another one
-		if (isRequestInProgress()) {
-			mRequestManager.removeRequestListener(mCurrentRequestListener);
-		}
 
-		stop();
-		stopLoading();
+    /** Aborts the current request, if any, and stops everything else. */
+    private void abortEverything() {
+        // Abort the current request before starting another one
+        if (isRequestInProgress()) {
+            mRequestManager.removeRequestListener(mCurrentRequestListener);
+        }
+
+        stop();
+        stopLoading();
     }
-    
+
     /**
      * Sets the content of the {@link ImageViewNext} with the data to be downloaded
      * from the provided URL.
@@ -346,13 +321,13 @@ public class ImageViewNext extends ImageViewEx {
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     public void setUrl(String url) {
-    	mUrl = url;
-    	
-    	// Abort the pending request (if any) and stop animating/loading
-    	abortEverything();
+        mUrl = url;
+
+        // Abort the pending request (if any) and stop animating/loading
+        abortEverything();
 
         // Start the whole retrieval chain
-    	getFromMemCache(url);
+        getFromMemCache(url);
     }
 
     /**
@@ -363,127 +338,128 @@ public class ImageViewNext extends ImageViewEx {
      * @return The URL set for this {@link ImageViewNext}.
      */
     public String getUrl() {
-    	return mUrl;
+        return mUrl;
     }
-    
+
     /**
-	 * Returns true if this instance will automatically retry the download from
-	 * the network when it becomes available once again.
-	 * The instance level settings has priority over the class level's.
-	 * 
-	 * @return true if the instance retries to download the image when the
-	 *         network is once again available, false otherwise.
-	 */
+     * Returns true if this instance will automatically retry the download from
+     * the network when it becomes available once again.
+     * The instance level settings has priority over the class level's.
+     *
+     * @return true if the instance retries to download the image when the
+     *         network is once again available, false otherwise.
+     */
     public boolean isAutoRetryFromNetwork() {
-		return mAutoRetryFromNetwork;
-	}
-    
-	/**
-	 * Sets the value of auto retry from network for this instance, set it to
-	 * true if this instance has to automatically retry the download from the
-	 * network when it becomes available once again, false otherwise. The
-	 * instance level settings has priority over the class level's.
-	 * 
-	 * If the instance was previously forbidden to auto-retry, it will be
-	 * allowed as soon as this method is called with a true argument.
-	 * 
-	 * If the instance was previously allowed to auto-retry, it will be
-	 * forbidden as soon as this method is called with a false argument.
-	 * 
-	 * @param autoRetryFromNetwork
-	 *            The instance value for the auto retry.
-	 */
-
-	public void setAutoRetryFromNetwork(boolean autoRetryFromNetwork) {
-		boolean registerAfter = false;
-		boolean unregisterAfter = false;
-		
-		// If nothing changes, do nothing
-		if (this.mAutoRetryFromNetwork == autoRetryFromNetwork) return;
-		
-		// Set the "after" booleans
-		registerAfter = (this.mAutoRetryFromNetwork == false);
-		unregisterAfter = (autoRetryFromNetwork == false);
-		
-		// Set the state value
-		this.mAutoRetryFromNetwork = autoRetryFromNetwork;
-		
-		// Register or unregister the receiver according to the new value
-		if (registerAfter) {
-			registerReceiver();
-		} else if (unregisterAfter) {
-			unregisterReceiver();
-		}
-	}
+        return mAutoRetryFromNetwork;
+    }
 
     /**
-	 * Returns true if every ImageViewNext will automatically retry the download from
-	 * the network when it becomes available once again.
-	 * 
-	 * @return true if ImageViewNext retries to download the image when the
-	 *         network is once again available, false otherwise.
-	 */
+     * Sets the value of auto retry from network for this instance, set it to
+     * true if this instance has to automatically retry the download from the
+     * network when it becomes available once again, false otherwise. The
+     * instance level settings has priority over the class level's.
+     * <p/>
+     * If the instance was previously forbidden to auto-retry, it will be
+     * allowed as soon as this method is called with a true argument.
+     * <p/>
+     * If the instance was previously allowed to auto-retry, it will be
+     * forbidden as soon as this method is called with a false argument.
+     *
+     * @param autoRetryFromNetwork The instance value for the auto retry.
+     */
 
-	public static boolean isClassAutoRetryFromNetwork() {
-		return ImageViewNext.mClassAutoRetryFromNetwork;
-	}
-	
-	/**
-	 * Sets the value of auto retry from network for ImageViewNext, set it to true 
-	 * if ImageViewNext has to automatically retry the download from
-	 * the network when it becomes available once again, false otherwise.
-	 * 
-	 * All of the existing constructed instances won't be affected by this.
-	 * 
-	 * @param classAutoRetryFromNetwork	The instance value for the auto retry.
-	 */
+    public void setAutoRetryFromNetwork(boolean autoRetryFromNetwork) {
+        boolean registerAfter = false;
+        boolean unregisterAfter = false;
 
-	public static void setClassAutoRetryFromNetwork(
-			boolean classAutoRetryFromNetwork) {
-		ImageViewNext.mClassAutoRetryFromNetwork = classAutoRetryFromNetwork;
-	}
+        // If nothing changes, do nothing
+        if (mAutoRetryFromNetwork == autoRetryFromNetwork) return;
 
-	
-	/**
-	 * Checks if the auto retry can be applied for the current instance.
-	 * 
-	 * @return true if this instance is allowed to auto retry network ops, false
-	 *         otherwise.
-	 */
-	private boolean isAutoRetryTrueSomewhere() {
-		return (isAutoRetryFromNetwork() ? true : isClassAutoRetryFromNetwork());
-	}
-	
-	/**
-	 * Tries to retrieve the image from network, if and only if:
-	 * <ul>
-	 * <li>No requests are pending for this instance.</li>
-	 * <li>A previous download failed.</li>
-	 * <li>The instance-level or class-level auto retry is set to true, with
-	 * this priority.</li>
-	 * </ul>
-	 */
-	public void retryFromNetworkIfPossible() {
-		// Only retry to get the image from the network:
-		// - if no requests are in progress
-		// - if the download previously failed
-		// - auto retry is set to true for the instance or the class (in order)
-		if (!isRequestInProgress() && hasFailedDownload && isAutoRetryTrueSomewhere()) {
-	        if (BuildConfig.DEBUG) Log.i(TAG, "Autoretry: true somewhere, retrying...");
-	        // Abort the pending request (if any) and stop animating/loading
-	    	abortEverything();
-	    	// Initalize caches
-	    	ImageViewNext.initCaches(mContext);
-	    	// Starts the retrieval from the network once again
-			getFromNetwork(getUrl());
-			// Cross ye fingers
-		} else {
-	        if (BuildConfig.DEBUG) Log.i(TAG, "Autoretry: false, sorry.");
-		}
-	}
-	
-	/**
+        // Set the "after" booleans
+        registerAfter = (!mAutoRetryFromNetwork);
+        unregisterAfter = (!autoRetryFromNetwork);
+
+        // Set the state value
+        mAutoRetryFromNetwork = autoRetryFromNetwork;
+
+        // Register or unregister the receiver according to the new value
+        if (registerAfter) {
+            registerReceiver();
+        }
+        else if (unregisterAfter) {
+            unregisterReceiver();
+        }
+    }
+
+    /**
+     * Returns true if every ImageViewNext will automatically retry the download from
+     * the network when it becomes available once again.
+     *
+     * @return true if ImageViewNext retries to download the image when the
+     *         network is once again available, false otherwise.
+     */
+
+    public static boolean isClassAutoRetryFromNetwork() {
+        return ImageViewNext.mClassAutoRetryFromNetwork;
+    }
+
+    /**
+     * Sets the value of auto retry from network for ImageViewNext, set it to true
+     * if ImageViewNext has to automatically retry the download from
+     * the network when it becomes available once again, false otherwise.
+     * <p/>
+     * All of the existing constructed instances won't be affected by this.
+     *
+     * @param classAutoRetryFromNetwork The instance value for the auto retry.
+     */
+
+    public static void setClassAutoRetryFromNetwork(
+        boolean classAutoRetryFromNetwork) {
+        ImageViewNext.mClassAutoRetryFromNetwork = classAutoRetryFromNetwork;
+    }
+
+    /**
+     * Checks if the auto retry can be applied for the current instance.
+     *
+     * @return true if this instance is allowed to auto retry network ops, false
+     *         otherwise.
+     */
+    private boolean isAutoRetryTrueSomewhere() {
+        return (isAutoRetryFromNetwork() || isClassAutoRetryFromNetwork());
+    }
+
+    /**
+     * Tries to retrieve the image from network, if and only if:
+     * <ul>
+     * <li>No requests are pending for this instance.</li>
+     * <li>A previous download failed.</li>
+     * <li>The instance-level or class-level auto retry is set to true, with
+     * this priority.</li>
+     * </ul>
+     */
+    public void retryFromNetworkIfPossible() {
+        // Only retry to get the image from the network:
+        // - if no requests are in progress
+        // - if the download previously failed
+        // - auto retry is set to true for the instance or the class (in order)
+        if (!isRequestInProgress() && hasFailedDownload && isAutoRetryTrueSomewhere()) {
+            if (BuildConfig.DEBUG) Log.i(TAG, "Autoretry: true somewhere, retrying...");
+            // Abort the pending request (if any) and stop animating/loading
+            abortEverything();
+            // Initalize caches
+            ImageViewNext.initCaches(mContext);
+            // Starts the retrieval from the network once again
+            getFromNetwork(getUrl());
+            // Cross ye fingers
+        }
+        else {
+            if (BuildConfig.DEBUG) Log.i(TAG, "Autoretry: false, sorry.");
+        }
+    }
+
+    /**
      * Tries to get the image from the memory cache.
+     *
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     private void getFromMemCache(String url) {
@@ -492,43 +468,43 @@ public class ImageViewNext extends ImageViewEx {
         if (mLoadCallbacks != null) {
             mLoadCallbacks.onLoadStarted(this, CacheLevel.MEMORY);
         }
-        
-    	// Get the URL from the input Bundle
- 		if (url == null || url.equals("")) return;
- 		
- 		// Initializes the caches, if they're not initialized already
- 		ImageViewNext.initCaches(mContext);
- 		
- 		LruCache<String, byte[]> cache = ImageViewNext.getMemCache();
- 		byte[] image = cache.get(url);
- 		
- 		if (image == null) {
- 			handleMemCacheMiss();
-        } else {
-            this.onMemCacheHit(image, url);
+
+        // Get the URL from the input Bundle
+        if (url == null || url.equals("")) return;
+
+        // Initializes the caches, if they're not initialized already
+        ImageViewNext.initCaches(mContext);
+
+        LruCache<String, byte[]> cache = ImageViewNext.getMemCache();
+        byte[] image = cache.get(url);
+
+        if (image == null) {
+            handleMemCacheMiss();
+        }
+        else {
+            onMemCacheHit(image, url);
         }
     }
-    
-	/**
-	 * Generic function to handle the mem cache miss.
-	 */
-	private void handleMemCacheMiss() {
-		// Calls the class callback
-		this.onMemCacheMiss();
-		// Starts searching in the disk cache
-		getFromDiskCache(this.getUrl());
-	}
+
+    /** Generic function to handle the mem cache miss. */
+    private void handleMemCacheMiss() {
+        // Calls the class callback
+        onMemCacheMiss();
+        // Starts searching in the disk cache
+        getFromDiskCache(getUrl());
+    }
 
     /**
      * Tries to get the image from the disk cache.
+     *
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     private void getFromDiskCache(String url) {
         if (BuildConfig.DEBUG) Log.i(TAG, "Diskcache: getting for URL " + url + " @" + hashCode());
-    	Request mRequest =
-				ImageViewExRequestFactory.getImageDiskCacheRequest(url);
-		mCurrentRequestListener = new ImageDiskCacheListener(this);
-		mRequestManager.execute(mRequest, mCurrentRequestListener);
+        Request mRequest =
+            ImageViewExRequestFactory.getImageDiskCacheRequest(url);
+        mCurrentRequestListener = new ImageDiskCacheListener(this);
+        mRequestManager.execute(mRequest, mCurrentRequestListener);
 
         if (mLoadCallbacks != null) {
             mLoadCallbacks.onLoadStarted(this, CacheLevel.DISK);
@@ -537,14 +513,15 @@ public class ImageViewNext extends ImageViewEx {
 
     /**
      * Tries to get the image from the network.
+     *
      * @param url The URL to download the image from. It can be an animated GIF.
      */
     private void getFromNetwork(String url) {
         if (BuildConfig.DEBUG) Log.i(TAG, "Network: getting for URL " + url + " @" + hashCode());
-    	Request mRequest =
-				ImageViewExRequestFactory.getImageDownloaderRequest(url);
-		mCurrentRequestListener = new ImageDownloadListener(this);
-		mRequestManager.execute(mRequest, mCurrentRequestListener);
+        Request mRequest =
+            ImageViewExRequestFactory.getImageDownloaderRequest(url);
+        mCurrentRequestListener = new ImageDownloadListener(this);
+        mRequestManager.execute(mRequest, mCurrentRequestListener);
 
         if (mLoadCallbacks != null) {
             mLoadCallbacks.onLoadStarted(this, CacheLevel.NETWORK);
@@ -554,33 +531,37 @@ public class ImageViewNext extends ImageViewEx {
     /**
      * Called when the image is got from whatever the source.
      * Override this to get the appropriate callback.
+     *
      * @param image The image as a byte array.
      */
     protected void onSuccess(byte[] image) {
-    	setByteArray(image);
+        setByteArray(image);
     }
 
     /**
      * Called when the image is got from whatever the source.
      * Checks if the original URL matches the current one set
      * in the instance of ImageViewNext.
+     *
      * @param image The image as a byte array.
-     * @param url	The URL of the retrieved image.
+     * @param url   The URL of the retrieved image.
      */
     private void onPreSuccess(byte[] image, String url) {
-    	// Only set the image if the current url equals to the retrieved image's url
-    	if (url != null && url.equals(getUrl()))
-    		onSuccess(image);
+        // Only set the image if the current url equals to the retrieved image's url
+        if (url != null && url.equals(getUrl())) {
+            onSuccess(image);
+        }
     }
 
     /**
      * Called when the image is got from the memory cache.
      * Override this to get the appropriate callback.
+     *
      * @param image The image as a byte array.
-     * @param url	The URL of the retrieved image.
+     * @param url   The URL of the retrieved image.
      */
     protected void onMemCacheHit(byte[] image, String url) {
-    	if (BuildConfig.DEBUG) Log.i(TAG, "Memory cache HIT @" + hashCode());
+        if (BuildConfig.DEBUG) Log.i(TAG, "Memory cache HIT @" + hashCode());
         onPreSuccess(image, url);
 
         if (mLoadCallbacks != null) {
@@ -593,12 +574,13 @@ public class ImageViewNext extends ImageViewEx {
      * Override this to get the appropriate callback.
      */
     protected void onMemCacheMiss() {
-    	Drawable loadingDrawable = getLoadingDrawable();
+        Drawable loadingDrawable = getLoadingDrawable();
         if (loadingDrawable != null) {
-    		ScaleType scaleType = getScaleType();
+            ScaleType scaleType = getScaleType();
             if (scaleType != null) {
                 setScaleType(scaleType);
-            } else {
+            }
+            else {
                 setScaleType(ScaleType.CENTER_INSIDE);
             }
             setImageDrawable(loadingDrawable);
@@ -618,8 +600,9 @@ public class ImageViewNext extends ImageViewEx {
     /**
      * Called when the image is got from the disk cache.
      * Override this to get the appropriate callback.
+     *
      * @param image The image as a byte array.
-     * @param url	The URL of the retrieved image.
+     * @param url   The URL of the retrieved image.
      */
     protected void onDiskCacheHit(byte[] image, String url) {
         if (BuildConfig.DEBUG) Log.i(TAG, "Disk cache HIT @" + hashCode());
@@ -643,8 +626,9 @@ public class ImageViewNext extends ImageViewEx {
     /**
      * Called when the image is got from the network.
      * Override this to get the appropriate callback.
+     *
      * @param image The image as a byte array.
-     * @param url	The URL of the retrieved image.
+     * @param url   The URL of the retrieved image.
      */
     protected void onNetworkHit(byte[] image, String url) {
         if (BuildConfig.DEBUG) Log.i(TAG, "Network HIT @" + hashCode());
@@ -673,12 +657,13 @@ public class ImageViewNext extends ImageViewEx {
      * Override this to get the appropriate callback.
      */
     protected void onMiss() {
-    	Drawable errorDrawable = getErrorDrawable();
+        Drawable errorDrawable = getErrorDrawable();
         if (getErrorDrawable() != null) {
-        	ScaleType scaleType = getScaleType();
-        	if (scaleType != null) {
+            ScaleType scaleType = getScaleType();
+            if (scaleType != null) {
                 setScaleType(scaleType);
-            } else {
+            }
+            else {
                 setScaleType(ScaleType.CENTER_INSIDE);
             }
             setImageDrawable(errorDrawable);
@@ -690,10 +675,11 @@ public class ImageViewNext extends ImageViewEx {
 
     /**
      * Sets the image from a byte array.
+     *
      * @param image The image to set.
      */
     private void setByteArray(final byte[] image) {
-    	if (image != null) {
+        if (image != null) {
             ScaleType scaleType = getScaleType();
             if (scaleType != null) {
                 setScaleType(scaleType);
@@ -701,17 +687,17 @@ public class ImageViewNext extends ImageViewEx {
             setSource(image);
         }
     }
-    
+
     /**
      * Returns the maximum number of concurrent worker threads
      * used to get images from cache/network.
-     * 
+     *
      * @return Maximum number of concurrent threads.
      */
     public static int getMaximumNumberOfThreads() {
-    	return mConcurrentThreads;
+        return mConcurrentThreads;
     }
-    
+
     /**
      * Define the maximum number of concurrent worker threads
      * used to get images from cache/network.
@@ -720,30 +706,30 @@ public class ImageViewNext extends ImageViewEx {
      * The value will be set once and for all when the first
      * ImageViewNext is instantiated. Calling this function again
      * after an ImageViewNext is instantiated will have no effect.
-     * 
+     *
      * @param concurrentThreads The number of concurrent threads.
      */
     public static void setMaximumNumberOfThreads(int concurrentThreads) {
-    	mConcurrentThreads = concurrentThreads;
+        mConcurrentThreads = concurrentThreads;
     }
 
     /**
      * Operation listener for the disk cache retrieval operation.
-     * @author Francesco Pontillo
      *
+     * @author Francesco Pontillo
      */
     private class ImageDiskCacheListener extends ImageViewExRequestListener {
 
-    	public ImageDiskCacheListener(ImageViewNext imageViewNext) {
-    		super(imageViewNext);
-    	}
+        public ImageDiskCacheListener(ImageViewNext imageViewNext) {
+            super(imageViewNext);
+        }
 
-    	@Override
-    	public void onRequestFinished(Request request, Bundle resultData) {
-    		byte[] image =
-    				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
-    		String url = 
-    				resultData.getString(ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL);
+        @Override
+        public void onRequestFinished(Request request, Bundle resultData) {
+            byte[] image =
+                resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
+            String url =
+                resultData.getString(ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL);
             if (image == null) {
                 handleMiss();
             }
@@ -752,50 +738,48 @@ public class ImageViewNext extends ImageViewEx {
             }
         }
 
-    	@Override
-    	public void onRequestConnectionError(Request request, int statusCode) {
-    		handleMiss();
-    	}
+        @Override
+        public void onRequestConnectionError(Request request, int statusCode) {
+            handleMiss();
+        }
 
-    	@Override
-    	public void onRequestDataError(Request request) {
-    		handleMiss();
-    	}
+        @Override
+        public void onRequestDataError(Request request) {
+            handleMiss();
+        }
 
-    	@Override
-    	public void onRequestCustomError(Request request, Bundle resultData) {
-    		handleMiss();
-    	}
+        @Override
+        public void onRequestCustomError(Request request, Bundle resultData) {
+            handleMiss();
+        }
 
-    	/**
-    	 * Generic function to handle the cache miss.
-    	 */
-    	private void handleMiss() {
-    		// Calls the class callback
-    		mImageViewNext.onDiskCacheMiss();
-    		// Starts searching in the network
-    		getFromNetwork(mImageViewNext.getUrl());
-    	}
+        /** Generic function to handle the cache miss. */
+        private void handleMiss() {
+            // Calls the class callback
+            mImageViewNext.onDiskCacheMiss();
+            // Starts searching in the network
+            getFromNetwork(mImageViewNext.getUrl());
+        }
 
     }
 
     /**
      * Operation listener for the network retrieval operation.
-     * @author Francesco Pontillo
      *
+     * @author Francesco Pontillo
      */
     private class ImageDownloadListener extends ImageViewExRequestListener {
 
-    	public ImageDownloadListener(ImageViewNext imageViewNext) {
-    		super(imageViewNext);
-    	}
+        public ImageDownloadListener(ImageViewNext imageViewNext) {
+            super(imageViewNext);
+        }
 
-    	@Override
-    	public void onRequestFinished(Request request, Bundle resultData) {
-    		byte[] image =
-    				resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
-    		String url = 
-    				resultData.getString(ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL);
+        @Override
+        public void onRequestFinished(Request request, Bundle resultData) {
+            byte[] image =
+                resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
+            String url =
+                resultData.getString(ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL);
             if (image == null) {
                 handleMiss();
             }
@@ -804,30 +788,28 @@ public class ImageViewNext extends ImageViewEx {
             }
         }
 
-    	@Override
-    	public void onRequestConnectionError(Request request, int statusCode) {
-    		handleMiss();
-    	}
+        @Override
+        public void onRequestConnectionError(Request request, int statusCode) {
+            handleMiss();
+        }
 
-    	@Override
-    	public void onRequestDataError(Request request) {
-    		handleMiss();
-    	}
+        @Override
+        public void onRequestDataError(Request request) {
+            handleMiss();
+        }
 
-    	@Override
-    	public void onRequestCustomError(Request request, Bundle resultData) {
-    		handleMiss();
-    	}
+        @Override
+        public void onRequestCustomError(Request request, Bundle resultData) {
+            handleMiss();
+        }
 
-    	/**
-    	 * Generic function to handle the network miss.
-    	 */
-    	private void handleMiss() {
-    		// Calls the class callback
-    		mImageViewNext.onNetworkMiss();
-    		// Calss the final miss class callback
-    		mImageViewNext.onMiss();
-    	}
+        /** Generic function to handle the network miss. */
+        private void handleMiss() {
+            // Calls the class callback
+            mImageViewNext.onNetworkMiss();
+            // Calss the final miss class callback
+            mImageViewNext.onMiss();
+        }
     }
 
     /** A simple interface for image loading callbacks. */

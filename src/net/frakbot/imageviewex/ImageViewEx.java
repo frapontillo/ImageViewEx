@@ -846,9 +846,9 @@ public class ImageViewEx extends ImageView {
      * @param canvas The {@link Canvas} to apply the {@link ScaleType} to.
      *
      * @return A float array containing, for each position:
-     * - 0 The x position of the gif
-     * - 1 The y position of the gif
-     * - 2 The scaling applied to the y-axis
+     *         - 0 The x position of the gif
+     *         - 1 The y position of the gif
+     *         - 2 The scaling applied to the y-axis
      */
     private float[] applyScaleType(Canvas canvas) {
         // Get the current dimensions of the view and the gif
@@ -875,8 +875,8 @@ public class ImageViewEx extends ImageView {
                 break;
 
             case CENTER_CROP:
-        		/*
-        		 * Scale the image uniformly (maintain the image's aspect ratio)
+                /*
+                 * Scale the image uniformly (maintain the image's aspect ratio)
         		 * so that both dimensions (width and height) of the image will
         		 * be equal to or larger than the corresponding dimension of the
         		 * view (minus padding). The image is then centered in the view.
