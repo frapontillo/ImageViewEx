@@ -269,9 +269,10 @@ public class ImageViewEx extends ImageView {
     public void setImageResource(int resId) {
         initializeDefaultValues();
         stopLoading();
+        stop();
         super.setImageResource(resId);
-        mGif = null;
         mImageSource = IMAGE_SOURCE_RESOURCE;
+        mGif = null;
     }
 
     /** {@inheritDoc} */
@@ -279,6 +280,7 @@ public class ImageViewEx extends ImageView {
         blockLayoutIfPossible();
         initializeDefaultValues();
         stopLoading();
+        stop();
         super.setImageDrawable(drawable);
         mBlockLayout = false;
         mGif = null;
@@ -289,9 +291,10 @@ public class ImageViewEx extends ImageView {
     public void setImageBitmap(Bitmap bm) {
         initializeDefaultValues();
         stopLoading();
+        stop();
         super.setImageBitmap(bm);
-        mGif = null;
         mImageSource = IMAGE_SOURCE_BITMAP;
+        mGif = null;
     }
 
     /** {@inheritDoc} */
