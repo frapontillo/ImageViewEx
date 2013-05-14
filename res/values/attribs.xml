@@ -18,5 +18,12 @@
 <resources>
     <declare-styleable name="ImageViewEx">
         <attr name="adjustViewBounds" format="boolean"/>
+        <attr name="emptyDrawable" format="reference|color"/>
+
+        <attr name="fillDirection" format="enum">
+            <enum name="none" value="0"/>
+            <enum name="horizontal" value="1"/>
+            <enum name="vertical" value="2"/>
+        </attr>
     </declare-styleable>
 </resources>

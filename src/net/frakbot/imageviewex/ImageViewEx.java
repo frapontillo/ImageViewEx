@@ -51,7 +51,7 @@ public class ImageViewEx extends ImageView {
     private static final int IMAGE_SOURCE_GIF = 2;
 
     @SuppressWarnings("unused")
-	private int mImageSource;
+    private int mImageSource;
 
     // Used by the fixed size optimizations
     private boolean mIsFixedSize = false;
@@ -77,6 +77,7 @@ public class ImageViewEx extends ImageView {
     private ScaleType mScaleType;
 
     protected Drawable mEmptyDrawable = new ColorDrawable(0x00000000);
+    protected FillDirection mFillDirection = FillDirection.NONE;
 
     ///////////////////////////////////////////////////////////
     ///                  CONSTRUCTORS                       ///
@@ -135,8 +136,16 @@ public class ImageViewEx extends ImageView {
                 }
             }
         }
-        
-    	a.recycle();
+
+        if (a.hasValue(R.styleable.ImageViewEx_fillDirection)) {
+            setFillDirection(a.getInt(R.styleable.ImageViewEx_fillDirection, 0));
+        }
+
+        if (a.hasValue(R.styleable.ImageViewEx_emptyDrawable)) {
+            setEmptyDrawable(a.getDrawable(R.styleable.ImageViewEx_emptyDrawable));
+        }
+
+        a.recycle();
     }
 
     /**
@@ -218,11 +227,11 @@ public class ImageViewEx extends ImageView {
         }
 
         Movie gif = null;
-        
+
         // If the animation is not requested
         // decoding into a Movie is pointless (read: expensive)
         if (internalCanAnimate()) {
-        	gif = Movie.decodeByteArray(src, 0, src.length);
+            gif = Movie.decodeByteArray(src, 0, src.length);
         }
 
         // If gif is null, it's probably not a gif
@@ -261,6 +270,7 @@ public class ImageViewEx extends ImageView {
         initializeDefaultValues();
         stopLoading();
         super.setImageResource(resId);
+        mGif = null;
         mImageSource = IMAGE_SOURCE_RESOURCE;
     }
 
@@ -271,6 +281,7 @@ public class ImageViewEx extends ImageView {
         stopLoading();
         super.setImageDrawable(drawable);
         mBlockLayout = false;
+        mGif = null;
         mImageSource = IMAGE_SOURCE_DRAWABLE;
     }
 
@@ -279,13 +290,59 @@ public class ImageViewEx extends ImageView {
         initializeDefaultValues();
         stopLoading();
         super.setImageBitmap(bm);
+        mGif = null;
         mImageSource = IMAGE_SOURCE_BITMAP;
     }
 
     /** {@inheritDoc} */
     @Override
     public void setScaleType(ScaleType scaleType) {
-    	super.setScaleType(scaleType);
+        super.setScaleType(scaleType);
+    }
+
+    /**
+     * Sets the fill direction for the image. This is used
+     * in conjunction with {@link #setAdjustViewBounds(boolean)}.
+     * If <code>adjustViewBounds</code> is not already enabled,
+     * it will be automatically enabled by setting the direction
+     * to anything other than {@link FillDirection#NONE}.
+     *
+     * @param direction The fill direction.
+     */
+    public void setFillDirection(FillDirection direction) {
+        if (direction != mFillDirection) {
+            mFillDirection = direction;
+
+            if (mFillDirection != FillDirection.NONE && !mAdjustViewBounds) {
+                setAdjustViewBounds(true);
+            }
+
+            requestLayout();
+        }
+    }
+
+    /**
+     * Private helper for
+     * {@link #setFillDirection(net.frakbot.imageviewex.ImageViewEx.FillDirection)}.
+     *
+     * @param direction The direction integer. 0 = NONE, 1 = HORIZONTAL,
+     *                  2 = VERTICAL.
+     */
+    private void setFillDirection(int direction) {
+        FillDirection fd;
+
+        switch (direction) {
+            case 1:
+                fd = FillDirection.HORIZONTAL;
+                break;
+            case 2:
+                fd = FillDirection.VERTICAL;
+                break;
+            default:
+                fd = FillDirection.NONE;
+        }
+
+        setFillDirection(fd);
     }
 
     /**
@@ -393,13 +450,13 @@ public class ImageViewEx extends ImageView {
 
     /**
      * Sets a new ImageAlign value and redraws the View.
-     * If the ImageViewEx has a ScaleType set too, this 
+     * If the ImageViewEx has a ScaleType set too, this
      * will override it!
      *
      * @param align The new ImageAlign value.
-     * 
-     * @deprecated Use setScaleType(ScaleType.FIT_START) 
-     * and setScaleType(ScaleType.FIT_END) instead.
+     *
+     * @deprecated Use setScaleType(ScaleType.FIT_START)
+     *             and setScaleType(ScaleType.FIT_END) instead.
      */
     public void setImageAlign(ImageAlign align) {
         if (align != mImageAlign) {
@@ -408,33 +465,29 @@ public class ImageViewEx extends ImageView {
         }
     }
 
-    @Override
-    public void setBackgroundColor(int color) {
-        //super.setBackgroundColor(color);
-        mEmptyDrawable = new ColorDrawable(color);
-    }
-
-    @Override
-    public void setBackgroundResource(int resid) {
-        //super.setBackgroundResource(resid);
-        mEmptyDrawable = getBackground();
-
-        if (mEmptyDrawable == null) {
-            mEmptyDrawable = new ColorDrawable(0x00000000);
-        }
-    }
-
-    @Override
-    public void setBackgroundDrawable(Drawable d) {
-        //super.setBackgroundDrawable(d);
-
-        mEmptyDrawable = d != null ?
-                         d :
-                         new ColorDrawable(0x00000000);
+    /**
+     * Sets the drawable used as "empty". Note that this
+     * is not automatically assigned by {@link ImageViewEx}
+     * but is used by descendants such as {@link ImageViewNext}.
+     *
+     * @param d The "empty" drawable
+     */
+    public void setEmptyDrawable(Drawable d) {
+        mEmptyDrawable = d;
     }
 
     @Override
     public void setAdjustViewBounds(boolean adjustViewBounds) {
+        if (mFillDirection != FillDirection.NONE) {
+            // Just in case, shouldn't be ever necessary
+            if (!mAdjustViewBounds) {
+                mAdjustViewBounds = true;
+                super.setAdjustViewBounds(true);
+            }
+
+            return;
+        }
+
         mAdjustViewBounds = adjustViewBounds;
         super.setAdjustViewBounds(adjustViewBounds);
     }
@@ -535,6 +588,24 @@ public class ImageViewEx extends ImageView {
     }
 
     /**
+     * Gets the fill direction for this ImageViewEx.
+     *
+     * @return Returns the fill direction.
+     */
+    public FillDirection getFillDirection() {
+        return mFillDirection;
+    }
+
+    /**
+     * Gets the drawable used as "empty" state.
+     *
+     * @return Returns the drawable used ad "empty".
+     */
+    public Drawable getEmptyDrawable() {
+        return mEmptyDrawable;
+    }
+
+    /**
      * Checks whether the class level density has been set.
      *
      * @return true if it has been set, false otherwise.
@@ -602,9 +673,8 @@ public class ImageViewEx extends ImageView {
      * Returns the current ImageAlign setting.
      *
      * @return Returns the current ImageAlign setting.
-     * 
-     * @deprecated Use setScaleType(ScaleType.FIT_START) 
-     * and setScaleType(ScaleType.FIT_END) instead.
+     * @deprecated Use setScaleType(ScaleType.FIT_START)
+     *             and setScaleType(ScaleType.FIT_END) instead.
      */
     public ImageAlign getImageAlign() {
         return mImageAlign;
@@ -721,13 +791,13 @@ public class ImageViewEx extends ImageView {
             int relTime = (int) ((now - mGifStartTime) % dur);
             mGif.setTime(relTime);
             int saveCnt = canvas.save(Canvas.MATRIX_SAVE_FLAG);
-            
+
             canvas.scale(mScale, mScale);
-            
-        	float[] gifDrawParams = applyScaleType(canvas);
-            
+
+            float[] gifDrawParams = applyScaleType(canvas);
+
             mGif.draw(canvas, gifDrawParams[0], gifDrawParams[1]);
-            
+
             if (mImageAlign != ImageAlign.NONE) {
                 // We have an alignment override.
                 // Note: at the moment we only have TOP as custom alignment,
@@ -742,9 +812,9 @@ public class ImageViewEx extends ImageView {
             canvas.restoreToCount(saveCnt);
         }
         else {
-        	// Reset the original scale type
-        	super.setScaleType(getScaleType());
-        	
+            // Reset the original scale type
+            super.setScaleType(getScaleType());
+
             if (mImageAlign == ImageAlign.NONE) {
                 // Everything is normal when there is no alignment override
                 super.onDraw(canvas);
@@ -767,20 +837,21 @@ public class ImageViewEx extends ImageView {
             }
         }
     }
-    
+
     /**
      * Applies the scale type of the ImageViewEx to the GIF.
      * Use the returned value to draw the GIF and calculate
      * the right y-offset, if any has to be set.
-     * 
-     * @param canvas	The {@link Canvas} to apply the {@link ScaleType} to.
-     * @return			A float array containing, for each position:
-     * 						- 0 The x position of the gif
-     * 						- 1 The y position of the gif
-     * 						- 2 The scaling applied to the y-axis
+     *
+     * @param canvas The {@link Canvas} to apply the {@link ScaleType} to.
+     *
+     * @return A float array containing, for each position:
+     * - 0 The x position of the gif
+     * - 1 The y position of the gif
+     * - 2 The scaling applied to the y-axis
      */
     private float[] applyScaleType(Canvas canvas) {
-    	// Get the current dimensions of the view and the gif
+        // Get the current dimensions of the view and the gif
         float vWidth = getWidth();
         float vHeight = getHeight();
         float gWidth = mGif.width() * mScale;
@@ -788,133 +859,138 @@ public class ImageViewEx extends ImageView {
 
         // Disable the default scaling, it can mess things up
         if (mScaleType == null) {
-        	mScaleType = getScaleType();
+            mScaleType = getScaleType();
             setScaleType(ScaleType.MATRIX);
         }
-        
+
         float x = 0;
         float y = 0;
         float s = 1;
-        
-        switch (mScaleType) {
-    		case CENTER:
-    			/* Center the image in the view, but perform no scaling. */
-        		x = (vWidth - gWidth) / 2 / mScale;
-        		y = (vHeight - gHeight) / 2 / mScale;
-        		break;
 
-        	case CENTER_CROP:
+        switch (mScaleType) {
+            case CENTER:
+                /* Center the image in the view, but perform no scaling. */
+                x = (vWidth - gWidth) / 2 / mScale;
+                y = (vHeight - gHeight) / 2 / mScale;
+                break;
+
+            case CENTER_CROP:
         		/*
         		 * Scale the image uniformly (maintain the image's aspect ratio)
         		 * so that both dimensions (width and height) of the image will
         		 * be equal to or larger than the corresponding dimension of the
         		 * view (minus padding). The image is then centered in the view.
         		 */
-        		float minDimensionCenterCrop = Math.min(gWidth, gHeight);
-        		if (minDimensionCenterCrop == gWidth) {
-        			s = vWidth / gWidth;
-        		} else {
-        			s = vHeight / gHeight;
-        		}
-        		x = (vWidth - gWidth * s) / 2 / (s * mScale);
-        		y = (vHeight - gHeight * s) / 2 / (s * mScale);
-        		canvas.scale(s, s);
-        		break;
+                float minDimensionCenterCrop = Math.min(gWidth, gHeight);
+                if (minDimensionCenterCrop == gWidth) {
+                    s = vWidth / gWidth;
+                }
+                else {
+                    s = vHeight / gHeight;
+                }
+                x = (vWidth - gWidth * s) / 2 / (s * mScale);
+                y = (vHeight - gHeight * s) / 2 / (s * mScale);
+                canvas.scale(s, s);
+                break;
 
-        	case CENTER_INSIDE:
+            case CENTER_INSIDE:
         		/*
         		 * Scale the image uniformly (maintain the image's aspect ratio)
         		 * so that both dimensions (width and height) of the image will
         		 * be equal to or less than the corresponding dimension of the
         		 * view (minus padding). The image is then centered in the view.
         		 */
-        		// Scaling only applies if the gif is larger than the container!
-        		if (gWidth > vWidth || gHeight > vHeight) {
-            		float maxDimensionCenterInside = Math.max(gWidth, gHeight);
-            		if (maxDimensionCenterInside == gWidth) {
-            			s = vWidth / gWidth;
-            		} else {
-            			s = vHeight / gHeight;
-            		}
-        		}
-        		x = (vWidth - gWidth * s) / 2 / (s * mScale);
-        		y = (vHeight - gHeight * s) / 2 / (s * mScale);
-        		canvas.scale(s, s);
-        		break;
+                // Scaling only applies if the gif is larger than the container!
+                if (gWidth > vWidth || gHeight > vHeight) {
+                    float maxDimensionCenterInside = Math.max(gWidth, gHeight);
+                    if (maxDimensionCenterInside == gWidth) {
+                        s = vWidth / gWidth;
+                    }
+                    else {
+                        s = vHeight / gHeight;
+                    }
+                }
+                x = (vWidth - gWidth * s) / 2 / (s * mScale);
+                y = (vHeight - gHeight * s) / 2 / (s * mScale);
+                canvas.scale(s, s);
+                break;
 
-        	case FIT_CENTER:
+            case FIT_CENTER:
         		/*
         		 * Compute a scale that will maintain the original src aspect ratio,
         		 * but will also ensure that src fits entirely inside dst.
         		 * At least one axis (X or Y) will fit exactly.
         		 * The result is centered inside dst.
         		 */
-        		// This scale type always scales the gif to the exact dimension of the View
-        		float maxDimensionFitCenter = Math.max(gWidth, gHeight);
-        		if (maxDimensionFitCenter == gWidth) {
-        			s = vWidth / gWidth;
-        		} else {
-        			s = vHeight / gHeight;
-        		}
-        		x = (vWidth - gWidth * s) / 2 / (s * mScale);
-        		y = (vHeight - gHeight * s) / 2 / (s * mScale);
-        		canvas.scale(s, s);
-        		break;
+                // This scale type always scales the gif to the exact dimension of the View
+                float maxDimensionFitCenter = Math.max(gWidth, gHeight);
+                if (maxDimensionFitCenter == gWidth) {
+                    s = vWidth / gWidth;
+                }
+                else {
+                    s = vHeight / gHeight;
+                }
+                x = (vWidth - gWidth * s) / 2 / (s * mScale);
+                y = (vHeight - gHeight * s) / 2 / (s * mScale);
+                canvas.scale(s, s);
+                break;
 
-        	case FIT_START:
+            case FIT_START:
         		/*
         		 * Compute a scale that will maintain the original src aspect ratio,
         		 * but will also ensure that src fits entirely inside dst.
         		 * At least one axis (X or Y) will fit exactly.
         		 * The result is centered inside dst.
         		 */
-        		// This scale type always scales the gif to the exact dimension of the View
-        		float maxDimensionFitStart = Math.max(gWidth, gHeight);
-        		if (maxDimensionFitStart == gWidth) {
-        			s = vWidth / gWidth;
-        		} else {
-        			s = vHeight / gHeight;
-        		}
-        		x = 0;
-        		y = 0;
-        		canvas.scale(s, s);
-        		break;
+                // This scale type always scales the gif to the exact dimension of the View
+                float maxDimensionFitStart = Math.max(gWidth, gHeight);
+                if (maxDimensionFitStart == gWidth) {
+                    s = vWidth / gWidth;
+                }
+                else {
+                    s = vHeight / gHeight;
+                }
+                x = 0;
+                y = 0;
+                canvas.scale(s, s);
+                break;
 
-        	case FIT_END:
+            case FIT_END:
         		/*
         		 * Compute a scale that will maintain the original src aspect ratio,
         		 * but will also ensure that src fits entirely inside dst.
         		 * At least one axis (X or Y) will fit exactly.
         		 * END aligns the result to the right and bottom edges of dst.
         		 */
-        		// This scale type always scales the gif to the exact dimension of the View
-        		float maxDimensionFitEnd = Math.max(gWidth, gHeight);
-        		if (maxDimensionFitEnd == gWidth) {
-        			s = vWidth / gWidth;
-        		} else {
-        			s = vHeight / gHeight;
-        		}
-        		x = (vWidth - gWidth * s) / mScale / s;
-        		y = (vHeight - gHeight * s) / mScale / s;
-        		canvas.scale(s, s);
-        		break;
+                // This scale type always scales the gif to the exact dimension of the View
+                float maxDimensionFitEnd = Math.max(gWidth, gHeight);
+                if (maxDimensionFitEnd == gWidth) {
+                    s = vWidth / gWidth;
+                }
+                else {
+                    s = vHeight / gHeight;
+                }
+                x = (vWidth - gWidth * s) / mScale / s;
+                y = (vHeight - gHeight * s) / mScale / s;
+                canvas.scale(s, s);
+                break;
 
-        	case FIT_XY:
+            case FIT_XY:
         		/*
         		 * Scale in X and Y independently, so that src matches dst exactly.
         		 * This may change the aspect ratio of the src.
         		 */
-        		float sFitX = vWidth / gWidth;
-        		s = vHeight / gHeight;
-        		x = 0;
-        		y = 0;
-        		canvas.scale(sFitX, s);
-        		break;
-        	default:
-        		break;
+                float sFitX = vWidth / gWidth;
+                s = vHeight / gHeight;
+                x = 0;
+                y = 0;
+                canvas.scale(sFitX, s);
+                break;
+            default:
+                break;
         }
-        
-        return new float[] { x, y, s };
+
+        return new float[] {x, y, s};
     }
 
     /** @see android.view.View#measure(int, int) */
@@ -948,8 +1024,8 @@ public class ImageViewEx extends ImageView {
             // We are supposed to adjust view bounds to match the aspect
             // ratio of our drawable. See if that is possible.
             if (mAdjustViewBounds) {
-                resizeWidth = widthSpecMode != MeasureSpec.EXACTLY;
-                resizeHeight = heightSpecMode != MeasureSpec.EXACTLY;
+                resizeWidth = widthSpecMode != MeasureSpec.EXACTLY && mFillDirection != FillDirection.HORIZONTAL;
+                resizeHeight = heightSpecMode != MeasureSpec.EXACTLY && mFillDirection != FillDirection.VERTICAL;
 
                 desiredAspect = (float) w / (float) h;
             }
@@ -963,8 +1039,8 @@ public class ImageViewEx extends ImageView {
             // We are supposed to adjust view bounds to match the aspect
             // ratio of our GIF. See if that is possible.
             if (mAdjustViewBounds) {
-                resizeWidth = widthSpecMode != MeasureSpec.EXACTLY;
-                resizeHeight = heightSpecMode != MeasureSpec.EXACTLY;
+                resizeWidth = widthSpecMode != MeasureSpec.EXACTLY && mFillDirection != FillDirection.HORIZONTAL;
+                resizeHeight = heightSpecMode != MeasureSpec.EXACTLY && mFillDirection != FillDirection.VERTICAL;
 
                 desiredAspect = (float) w / (float) h;
             }
@@ -984,10 +1060,9 @@ public class ImageViewEx extends ImageView {
         int heightSize;
 
         if (resizeWidth || resizeHeight) {
-            /* If we get here, it means we want to resize to match the
-                drawables aspect ratio, and we have the freedom to change at
-                least one dimension.
-            */
+            // If we get here, it means we want to resize to match the
+            // drawables aspect ratio, and we have the freedom to change at
+            // least one dimension.
 
             // Get the max possible width given our constraints
             widthSize = resolveAdjustedSize(w + pleft + pright, mMaxWidth, widthMeasureSpec);
@@ -997,7 +1072,7 @@ public class ImageViewEx extends ImageView {
 
             if (desiredAspect != 0.0f) {
                 // See what our actual aspect ratio is
-                float actualAspect = (float)(widthSize - pleft - pright) /
+                float actualAspect = (float) (widthSize - pleft - pright) /
                                      (heightSize - ptop - pbottom);
 
                 if (Math.abs(actualAspect - desiredAspect) > 0.0000001) {
@@ -1006,9 +1081,9 @@ public class ImageViewEx extends ImageView {
 
                     // Try adjusting width to be proportional to height
                     if (resizeWidth) {
-                        int newWidth = (int)(desiredAspect * (heightSize - ptop - pbottom)) +
+                        int newWidth = (int) (desiredAspect * (heightSize - ptop - pbottom)) +
                                        pleft + pright;
-                        if (newWidth <= widthSize) {
+                        if (newWidth <= widthSize || mFillDirection == FillDirection.VERTICAL) {
                             widthSize = newWidth;
                             done = true;
                         }
@@ -1016,15 +1091,16 @@ public class ImageViewEx extends ImageView {
 
                     // Try adjusting height to be proportional to width
                     if (!done && resizeHeight) {
-                        int newHeight = (int)((widthSize - pleft - pright) / desiredAspect) +
+                        int newHeight = (int) ((widthSize - pleft - pright) / desiredAspect) +
                                         ptop + pbottom;
-                        if (newHeight <= heightSize) {
+                        if (newHeight <= heightSize || mFillDirection == FillDirection.HORIZONTAL) {
                             heightSize = newHeight;
                         }
                     }
                 }
             }
-        } else {
+        }
+        else {
             /* We either don't want to preserve the drawables aspect ratio,
                or we are not allowed to change view dimensions. Just measure in
                the normal way.
@@ -1058,27 +1134,28 @@ public class ImageViewEx extends ImageView {
     ///                  PRIVATE HELPERS                    ///
     ///////////////////////////////////////////////////////////
 
-    /**
-     * Copied from {@link ImageView}'s implementation.
-     */
+    /** Copied from {@link ImageView}'s implementation. */
     private int resolveAdjustedSize(int desiredSize, int maxSize,
                                     int measureSpec) {
         int result = desiredSize;
         int specMode = MeasureSpec.getMode(measureSpec);
-        int specSize =  MeasureSpec.getSize(measureSpec);
+        int specSize = MeasureSpec.getSize(measureSpec);
+
         switch (specMode) {
             case MeasureSpec.UNSPECIFIED:
-                /* Parent says we can be as big as we want. Just don't be larger
-                   than max size imposed on ourselves.
-                */
+                // Parent says we can be as big as we want. Just don't be larger
+                // than max size imposed on ourselves.
+
                 result = Math.min(desiredSize, maxSize);
                 break;
+
             case MeasureSpec.AT_MOST:
                 // Parent says we can be as big as we want, up to specSize.
                 // Don't be larger than specSize, and don't be larger than
                 // the max size imposed on ourselves.
                 result = Math.min(Math.min(desiredSize, specSize), maxSize);
                 break;
+
             case MeasureSpec.EXACTLY:
                 // No choice. Do what we are told.
                 result = specSize;
@@ -1156,7 +1233,7 @@ public class ImageViewEx extends ImageView {
         if (mHandler != null) {
             mHandler.removeCallbacks(mSetDrawableRunnable);
             mHandler.removeCallbacks(mSetGifRunnable);
-    	}
+        }
     }
 
 
@@ -1191,9 +1268,7 @@ public class ImageViewEx extends ImageView {
         };
     }
 
-    /**
-     * A Runnable that sets a specified Drawable on the ImageView.
-     */
+    /** A Runnable that sets a specified Drawable on the ImageView. */
     private class SetDrawableRunnable implements Runnable {
 
         private Drawable mDrawable;
@@ -1227,9 +1302,7 @@ public class ImageViewEx extends ImageView {
         }
     }
 
-    /**
-     * A Runnable that sets a specified Movie on the ImageView.
-     */
+    /** A Runnable that sets a specified Movie on the ImageView. */
     private class SetGifRunnable implements Runnable {
 
         private Movie mGifMovie;
@@ -1249,14 +1322,48 @@ public class ImageViewEx extends ImageView {
                     return;
                 }
 
+                initializeDefaultValues();
+                mImageSource = IMAGE_SOURCE_GIF;
+                setImageDrawable(null);
+                mGif = mGifMovie;
+
                 measure(0, 0);
                 requestLayout();
 
-                initializeDefaultValues();
-                mImageSource = IMAGE_SOURCE_GIF;
-                mGif = mGifMovie;
                 play();
             }
         }
+    }
+
+    /**
+     * The fill direction for the image. All values other than
+     * {@link FillDirection#NONE} imply having the
+     * <code>adjustViewBounds</code> function active on the
+     * {@link ImageViewEx}.
+     */
+    public enum FillDirection {
+        /**
+         * No fill direction. Acts just like a common
+         * {@link ImageView} does.
+         */
+        NONE,
+
+        /**
+         * If the width of the {@link ImageViewEx} is longer
+         * than the width of the image it contains, the image
+         * is scaled to fit the width of the view. The height
+         * of the view is then adjusted to fit the height of
+         * the scaled image.
+         */
+        HORIZONTAL,
+
+        /**
+         * If the height of the {@link ImageViewEx} is longer
+         * than the height of the image it contains, the image
+         * is scaled to fit the height of the view. The width
+         * of the view is then adjusted to fit the width of
+         * the scaled image.
+         */
+        VERTICAL
     }
 }

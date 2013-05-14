@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent">
 
@@ -20,31 +21,45 @@
                 android:layout_height="130dp"
                 android:scaleType="fitXY"
                 android:background="#0f0"
-                android:src="@drawable/ic_launcher"/>
+                android:src="@drawable/ic_launcher"
+                app:fillDirection="horizontal"/>
 
         <net.frakbot.imageviewex.ImageViewEx
                 android:id="@+id/imageViewEx2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="#00f"
                 android:src="@drawable/ic_launcher"/>
 
         <net.frakbot.imageviewex.ImageViewEx
                 android:id="@+id/imageViewEx3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="#f00"
                 android:src="@drawable/ic_launcher"/>
 
         <net.frakbot.imageviewex.ImageViewEx
                 android:id="@+id/imageViewEx4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="#00f"
                 android:src="@drawable/ic_launcher"/>
 
         <net.frakbot.imageviewex.ImageViewEx
                 android:id="@+id/imageViewEx5"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="#f00"
                 android:src="@drawable/ic_launcher"/>
+
+        <net.frakbot.imageviewex.ImageViewEx
+                android:id="@+id/imageViewEx6"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_launcher"
+                android:layout_marginTop="30dp"
+                android:background="#0f0"
+                app:fillDirection="horizontal"/>
 
     </LinearLayout>
 </ScrollView>
