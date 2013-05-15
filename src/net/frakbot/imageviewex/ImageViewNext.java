@@ -166,7 +166,7 @@ public class ImageViewNext extends ImageViewEx {
 
     /** @param memCacheSize The in-memory cache size to set, in bits. */
     public static void setMemCacheSize(int memCacheSize) {
-        ImageViewNext.mMemCacheSize = memCacheSize;
+        mMemCacheSize = memCacheSize;
     }
 
     /** @return The version of the app. */
@@ -298,8 +298,8 @@ public class ImageViewNext extends ImageViewEx {
      * @return true if there is a pending request, false otherwise.
      */
     private boolean isRequestInProgress() {
-        return (mCurrentRequest != null
-                && mRequestManager.isRequestInProgress(mCurrentRequest));
+        return mCurrentRequest != null
+                && mRequestManager.isRequestInProgress(mCurrentRequest);
     }
 
     /** Aborts the current request, if any, and stops everything else. */
@@ -368,15 +368,15 @@ public class ImageViewNext extends ImageViewEx {
      */
 
     public void setAutoRetryFromNetwork(boolean autoRetryFromNetwork) {
-        boolean registerAfter = false;
-        boolean unregisterAfter = false;
+        boolean registerAfter;
+        boolean unregisterAfter;
 
         // If nothing changes, do nothing
         if (mAutoRetryFromNetwork == autoRetryFromNetwork) return;
 
         // Set the "after" booleans
-        registerAfter = (!mAutoRetryFromNetwork);
-        unregisterAfter = (!autoRetryFromNetwork);
+        registerAfter = !mAutoRetryFromNetwork;
+        unregisterAfter = !autoRetryFromNetwork;
 
         // Set the state value
         mAutoRetryFromNetwork = autoRetryFromNetwork;
@@ -424,7 +424,7 @@ public class ImageViewNext extends ImageViewEx {
      *         otherwise.
      */
     private boolean isAutoRetryTrueSomewhere() {
-        return (isAutoRetryFromNetwork() || isClassAutoRetryFromNetwork());
+        return isAutoRetryFromNetwork() || isClassAutoRetryFromNetwork();
     }
 
     /**
@@ -469,7 +469,7 @@ public class ImageViewNext extends ImageViewEx {
         }
 
         // Get the URL from the input Bundle
-        if (url == null || url.equals("")) return;
+        if (url == null || "".equals(url)) return;
 
         // Initializes the caches, if they're not initialized already
         ImageViewNext.initCaches(mContext);

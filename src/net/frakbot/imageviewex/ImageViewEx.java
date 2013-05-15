@@ -1240,6 +1240,7 @@ public class ImageViewEx extends ImageView {
      * {@link ImageViewNext.ImageLoadCompletionListener#onLoadStarted(ImageViewNext, ImageViewNext.CacheLevel)}.
      */
     public void showEmptyDrawable() {
+        setScaleType(ScaleType.CENTER_CROP);
         super.setImageDrawable(mEmptyDrawable);
     }
 
