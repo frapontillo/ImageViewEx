@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import com.squareup.okhttp.OkHttpClient;
+
 /**
  * Helper class that exposes some utility methods for retrieving
  * objects from the network.
@@ -28,11 +30,9 @@ public class RemoteHelper {
      * @return Byte array of the downloaded object.
      */
     public static byte[] download(String resourceUrl) throws IOException {
+        OkHttpClient client = new OkHttpClient();
         URL url = new URL(resourceUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setInstanceFollowRedirects(true);
-        connection.connect();
-        // TODO: handle protocol changes between HTTPS and HTTP (and vice-versa)
+        HttpURLConnection connection = client.open(url);
 
         final int responseCode = connection.getResponseCode();
         if (responseCode != HttpURLConnection.HTTP_OK) {
