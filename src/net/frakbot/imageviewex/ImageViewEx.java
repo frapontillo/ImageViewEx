@@ -214,7 +214,7 @@ public class ImageViewEx extends ImageView {
      * @param src The byte array containing the image to set into the ImageViewEx.
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void setSourceBlocking(final byte[] src) {
+	public void setSourceBlocking(final byte[] src) {
         if (src == null) {
             try {
                 stop();

@@ -45,10 +45,11 @@ The following is a brief documentation of the classes, methods and views include
 
 This library requires Android **API level 8** (Android 2.2) as minimum, and targets the Android **API level 17**.
 
-Starting from version 2.0.0, you need to include in your destination project:
+You need to include in your destination project:
 
  * [JakeWharton/DiskLruCache](https://github.com/JakeWharton/DiskLruCache) library, used for caching on disk.
  * [foxykeep/DataDroid](https://github.com/foxykeep/DataDroid) library, used for handling async operations.
+ * [square/okhttp](https://github.com/square/okhttp) library, for a better connection management.
  
 The Eclipse project included specifies this is a library project, although it provides two basic Activities for testing the extended `ImageView`s provided.
 

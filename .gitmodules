@@ -4,3 +4,6 @@
 [submodule "submods/DiskLruCache"]
 	path = submods/DiskLruCache
 	url = git://github.com/JakeWharton/DiskLruCache.git
+[submodule "submods/okhttp"]
+	path = submods/okhttp
+	url = git://github.com/square/okhttp.git
