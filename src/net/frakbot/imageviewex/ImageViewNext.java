@@ -779,7 +779,7 @@ public class ImageViewNext extends ImageViewEx {
                 resultData.getByteArray(ImageViewExRequestFactory.BUNDLE_EXTRA_OBJECT);
             String url =
                 resultData.getString(ImageViewExRequestFactory.BUNDLE_EXTRA_IMAGE_URL);
-            if (image == null) {
+            if (image == null || image.length == 0) {
                 handleMiss();
             }
             else {

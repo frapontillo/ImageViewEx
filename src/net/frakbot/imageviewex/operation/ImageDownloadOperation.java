@@ -3,6 +3,8 @@ package net.frakbot.imageviewex.operation;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.util.LruCache;
+import android.text.TextUtils;
+import android.util.Log;
 import com.foxykeep.datadroid.exception.ConnectionException;
 import com.foxykeep.datadroid.exception.CustomRequestException;
 import com.foxykeep.datadroid.exception.DataException;
@@ -41,7 +43,7 @@ public class ImageDownloadOperation implements Operation {
 
         // Get the URL from the input Bundle
         String url = request.getString(PARAM_IMAGE_URL);
-        if (url == null || url.equals("")) throw new DataException("No value for URL " + url);
+        if (TextUtils.isEmpty(url)) throw new DataException("No value for URL parameter");
 
         byte[] image;
         try {
@@ -68,7 +70,7 @@ public class ImageDownloadOperation implements Operation {
                 }
             }
             catch (Exception e) {
-                e.printStackTrace();
+                Log.w(ImageDownloadOperation.class.getSimpleName(), "Storage of image into the disk cache failed!");
             }
             // Save into the memory cache
             LruCache<String, byte[]> memCache = ImageViewNext.getMemCache();
