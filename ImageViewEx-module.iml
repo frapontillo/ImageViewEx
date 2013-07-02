@@ -54,6 +54,7 @@
     </orderEntry>
     <orderEntry type="module" module-name="DataDroid-imgviewex" scope="PROVIDED" />
     <orderEntry type="module" module-name="disklrucache-imgviewex" scope="PROVIDED" />
+    <orderEntry type="module" module-name="okhttp" />
   </component>
 </module>
 
