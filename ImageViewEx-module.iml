@@ -14,12 +14,7 @@
     <facet type="android" name="Android">
       <configuration>
         <option name="LIBRARY_PROJECT" value="true" />
-        <notImportedProperties>
-          <property>MANIFEST_FILE_PATH</property>
-          <property>RESOURCES_DIR_PATH</property>
-          <property>ASSETS_DIR_PATH</property>
-          <property>NATIVE_LIBS_DIR_PATH</property>
-        </notImportedProperties>
+        <option name="UPDATE_PROPERTY_FILES" value="true" />
       </configuration>
     </facet>
   </component>
