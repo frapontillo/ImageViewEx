@@ -1,4 +1,6 @@
-#ImageViewEx
+#ImageViewEx [DEPRECATED]
+
+**This library has been deprecated. Please consider using [square/picasso](https://github.com/square/picasso) instead.**
 
 ---
 
