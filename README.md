@@ -1,4 +1,4 @@
-#ImageViewEx [DEPRECATED]
+# ImageViewEx [DEPRECATED]
 
 **This library has been deprecated. Please consider using [square/picasso](https://github.com/square/picasso) instead.**
 
@@ -6,11 +6,11 @@
 
 Extension of Android's ImageView that supports animated GIFs and includes a better density management.
 
-##Author
+## Author
 
 **Francesco Pontillo** and **Sebastiano Poggi**
 
-##Description
+## Description
 
 The **ImageViewEx** is an extension of the standard Android `ImageView` that fills in one of the biggest gaps in the standard `ImageView`: displaying **animated GIFs**.
 
@@ -20,7 +20,7 @@ The `ImageViewEx` also allows you to specify what has to be considered the defau
 
 The following is a brief documentation of the classes, methods and views included in this library.
 
-##Index
+## Index
 
 1. [Import and usage](#import)
 2. [ImageViewEx](#imageviewex)
@@ -43,7 +43,7 @@ The following is a brief documentation of the classes, methods and views include
 7. [License](#license)
 
 <a name="import"/>
-##Import and usage
+## Import and usage
 
 This library requires Android **API level 8** (Android 2.2) as minimum, and targets the Android **API level 17**.
 
@@ -68,12 +68,12 @@ The `ImageViewExService` service is also internally used by `ImageViewNext` for 
 ```
 
 <a name="imageviewex"/>
-##ImageViewEx
+## ImageViewEx
 
 `ImageViewEx` is an extended `ImageView` that supports some additional methods for your every-day life.
 
 <a name="animated-gifs"/>
-###Animated GIF
+### Animated GIF
 
 The best thing about `ImageViewEx` is its **automatic handling of animated GIF images** starting from a simple `byte[]`.
 
@@ -94,7 +94,7 @@ Accessory methods are:
  * `void stop()` to stop playing the GIF, if it has started
 
 <a name="conditional-animation"/>
-###Conditional animation
+### Conditional animation
 
 As mentioned earlier, you may not want to animate some GIF under some conditions.
 
@@ -111,7 +111,7 @@ to specify you never want to animate GIFs. If you don't set any value to `setCan
 You can check the current behavior by calling the `static boolean getCanAlwaysAnimate()` method.
 
 <a name="density-level"/>
-###Density Level
+### Density Level
 
 You can set a **specific density to simulate** for every instance of `ImageViewEx` by using the following methods:
 
@@ -127,7 +127,7 @@ You can even set a density for just one of your `ImageViewEx`s:
  * `void dontOverrideDensity()`, restores the regular density of the `ImageViewEx`
 
 <a name="fillDirection"/>
-###Fill direction
+### Fill direction
 The `ImageViewEx` has one unique feature: it allows you to decide which direction to fit the image on, and then resize
 the other dimension (this function implies `adjustViewBounds`) to show the scaled image. For example, you can use this
 to show a banner which fills the whole horizontal available space (the `ImageViewEx` has
@@ -137,7 +137,7 @@ Setting `fillDirection="horizontal"` will prioritize filling the available horiz
 aspect ratio and expanding the `ImageViewEx` to fit the height.
 
 <a name="regular-behavior"/>
-###Regular behavior
+### Regular behavior
 
 `ImageViewEx` is, after all, a regular `ImageView`, so you can go ahead and use its regular methods:
 
@@ -147,7 +147,7 @@ aspect ratio and expanding the `ImageViewEx` to fit the height.
  * and so on.
 
 <a name="imageviewex-example"/>
-###Example of use
+### Example of use
 
 ```java
 	// Disables animation, behaving like a regular ImageView,
@@ -167,14 +167,14 @@ aspect ratio and expanding the `ImageViewEx` to fit the height.
 ```
 
 <a name="imageviewnext"/>
-##ImageViewNext
+## ImageViewNext
 
 `ImageViewExService` is used by `ImageViewNext`, an extension of `ImageViewEx` that handles **downloading, displaying and caching of images (and animated GIFs, of course)**.
 
 `ImageViewNext` extends `ImageViewEx`, thus supporting all of its methods, plus some more.
 
 <a name="remote-loading"/>
-###Remote loading and caching of images
+### Remote loading and caching of images
 
 `ImageViewNext` uses `ImageViewExService` and some DataDroid `Operation`s to retrieve images from a two-level cache and the internet and set them into your `ImageViewNext`.
  
@@ -190,7 +190,7 @@ aspect ratio and expanding the `ImageViewEx` to fit the height.
  * `setDiskCacheSize(int diskCacheSize)`
 
 <a name="loading-error-drawables"/>
-###Loading and Error Drawables
+### Loading and Error Drawables
 
 `ImageViewNext` supports loading and error `Drawable`s:
 
@@ -202,7 +202,7 @@ aspect ratio and expanding the `ImageViewEx` to fit the height.
  * `Drawable getErrorDrawable()` returns the `Drawable` to be displayed in case of an error.
 
 <a name="getting-from-internet"/>
-###Getting images from the Internet
+### Getting images from the Internet
 
 In order to get images from the Internet, simply call `setUrl(String url)` to start retrieving an image from the internet or the caches.
 
@@ -222,7 +222,7 @@ You should not worry about setting images, as this is handled by `ImageViewNext`
 If you override `ImageViewNext`, always call the default implementation of these methods.
 
 <a name="network-failures"/>
-###Handling network failures
+### Handling network failures
 
 By default, starting from version 2.2.0, each `ImageViewNext` will listen to network availability changes and automatically retry and get the image from the Internet, if and only if the same instance failed to do so in the previous attempt.
 
@@ -239,7 +239,7 @@ To know what the current settings are in regards to auto retry, use:
 **Remember**: the instance-specific setting has an higher priority than the class-level setting.
 
 <a name="thread-number"/>
-###Maximum number of threads
+### Maximum number of threads
 
 You can set the maximum number of concurrent threads; threads are used to retrieve an image, given its URL, from the memory cache, the disk cache or the network.
 
@@ -248,7 +248,7 @@ Use `ImageViewNext.setMaximumNumberOfThreads(THREAD_NUMBER)` BEFORE any `ImageVi
 You can retrieve the maximum number of concurrent threads with `ImageViewNext.getMaximumNumberOfThreads()`.
 
 <a name="imageviewnext-example"/>
-###Example of use
+### Example of use
 
 ```java
 	// Sets class-level loading/error Drawables
@@ -260,7 +260,7 @@ You can retrieve the maximum number of concurrent threads with `ImageViewNext.ge
 ```
 
 <a name="issues-workarounds"/>
-##Known issues and workarounds
+## Known issues and workarounds
 
 `ImageViewEx`internally uses an old Android Framework class, `Movie`, to parse animated GIFs. This ensures fast execution, since the `Movie` class internally relies on native code. Due to `Movie` being a legacy class, though, there are a few quirks.
 
@@ -269,7 +269,7 @@ Firstly, you can't have `Movie` working on an hardware-accelerated canvas in Hon
 The second issue is that `Movie` has serious issues on some emulator instances and some retail devices. This is most likely due to some broken code down at native (maybe in Skia) or video driver level. So not much we can do on this one either. On the bright side, we've provided a workaround, that is setting `setCanAlwaysAnimate(false)` on phones known to cause issues. You will lose animation support, but you don't need to get crazy trying to handle several layouts, some using `ImageView`s and some using `ImageViewEx`es.
 
 <a name="boring-stuff"/>
-##Some boring stuff
+## Some boring stuff
 If you like this project and want to make a contribution, feel free to make a pull request, submit a bug report or ask for anything. Any contribution is appreciated!
 
 If you use this library, letting us know would make us proud. We do not ask for anything else.
